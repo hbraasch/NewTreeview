@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:layout_gravity="center_vertical"
+	android:gravity="center_vertical"
+    android:singleLine="false"
+    android:orientation="horizontal">
+
+    <ImageView
+        android:id="@+id/treenode_icon"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:layout_marginBottom="5dp"
+        android:layout_marginLeft="5dp"
+        android:layout_marginTop="5dp"
+        android:gravity="center_vertical|center"/>
+    
+	<CheckBox
+	    android:id="@+id/treenode_checkbox"
+	    android:button="@null"
+	    android:layout_width="35dp"
+	    android:layout_height="35dp"
+        android:visibility="gone"
+        android:gravity="center_vertical|center_horizontal"
+	    android:text="" />
+	
+	<FrameLayout
+	    android:layout_width="match_parent"
+	    android:layout_height="match_parent"
+	    android:layout_marginLeft="5dp" >
+
+	    <treeview.IndentableTextView
+		    xmlns:android="http://schemas.android.com/apk/res/android"
+		    android:id="@+id/treenode_description"
+		    android:layout_width="match_parent"
+		    android:layout_height="match_parent"
+		    android:layout_gravity="left"
+		    android:fadingEdge="vertical"/>
+
+		<ImageView
+		    android:id="@+id/treenode_media_preview"
+		    android:layout_width="35dp"
+		    android:layout_height="35dp"
+		    android:layout_marginBottom="5dp"
+		    android:layout_marginLeft="5dp"
+		    android:layout_marginRight="5dp"
+		    android:layout_marginTop="5dp"
+		    android:layout_gravity="right"
+		    android:clickable="true"
+		    android:scaleType="fitCenter"
+		    android:visibility="visible"
+		    android:src="@drawable/treenode_media_preview_layer" />
+	    
+	    
+	</FrameLayout>
+	
+	
+ 
+</LinearLayout>
+
+
+
