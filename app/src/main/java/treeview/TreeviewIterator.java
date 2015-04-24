@@ -8,11 +8,11 @@ import java.util.ArrayList;
 public class TreeviewIterator {
 
     private ArrayList<Treenode> rootTreenodes;
-    private OnNodeTouchedListener onNodeTouchedListener;
+    private OnTouchAllNodesListener onNodeTouchedListener;
 
-    public interface OnNodeTouchedListener {
+    public interface OnTouchAllNodesListener {
         /**
-         *
+         * Traverse downwards through treeview, touching all child nodes, starting from the constructor presented childnode collection
          * @param parentArrayList parent collection containing this node
          * @param treenode the current node under inspection
          * @param intLevel indentation level (topmost level index = 0)
@@ -20,6 +20,18 @@ public class TreeviewIterator {
          */
         public boolean onNode(ArrayList<Treenode> parentArrayList, Treenode treenode, int intLevel);
     }
+
+    public interface OnTouchAllParentNodesListener {
+        /**
+         * Traverse upwards through treeview, touching all parent nodes till root (treenode == null) is reached
+         * @param treenode the current node under inspection
+         * @return if true, itteration stops immediately. If false, itteration continue
+         */
+        public boolean onParentNode(Treenode treenode);
+    }
+
+
+
 
     public interface FindClause {
         /**
@@ -34,18 +46,26 @@ public class TreeviewIterator {
         this.rootTreenodes = rootTreenodes;
     }
 
-    public void execute(OnNodeTouchedListener onNodeTouchedListener) {
+    public void execute(OnTouchAllNodesListener onTouchAllNodesListener) {
         int intLevel;
-        this.onNodeTouchedListener = onNodeTouchedListener;
+        this.onNodeTouchedListener = onTouchAllNodesListener;
         for (Treenode rootTreenode : rootTreenodes) {
             intLevel = 0;
             TouchTreeNodesRecursively(rootTreenodes, rootTreenode, intLevel);
         }
     }
 
+    public void execute(Treenode startNode, OnTouchAllParentNodesListener onTouchAllParentNodesListener) {
+        Treenode parent = startNode.getParent();
+        while (parent != null) {
+            onTouchAllParentNodesListener.onParentNode(parent);
+        }
+        onTouchAllParentNodesListener.onParentNode(null);
+    }
+
     public ArrayList<Treenode> Find(final FindClause findClause) {
         final ArrayList<Treenode> foundTreeNodes = new ArrayList<Treenode>();
-        execute(new OnNodeTouchedListener() {
+        execute(new OnTouchAllNodesListener() {
             @Override
             public boolean onNode(ArrayList<Treenode> parentArrayList, Treenode treenode, int intLevel) {
                 if (findClause.isNodeFound(treenode)) {

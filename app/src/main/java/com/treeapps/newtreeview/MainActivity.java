@@ -7,6 +7,7 @@ import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ListView;
 
+import java.util.HashMap;
 import java.util.Map;
 
 import treeview.Treenode;
@@ -14,6 +15,18 @@ import treeview.Treeview;
 
 
 public class MainActivity extends ActionBarActivity {
+
+
+    public static enum EnumIconImageId {
+        EMPTY(0), COLLAPSED(1), EXPANDED(2);
+        final int numTab;
+        private EnumIconImageId(int num) {
+            this.numTab = num;
+        }
+        public int getValue() {
+            return this.numTab;
+        }
+    }
 
     Treeview treeview;
     Map<Integer,Drawable> iconImages;
@@ -24,6 +37,13 @@ public class MainActivity extends ActionBarActivity {
         setContentView(R.layout.activity_main);
 
         if (savedInstanceState == null) {
+            // Set up values
+            iconImages = new HashMap<Integer,Drawable>();
+            iconImages.put(EnumIconImageId.EMPTY.getValue(), getResources().getDrawable(R.mipmap.item_empty));
+            iconImages.put(EnumIconImageId.COLLAPSED.getValue(), getResources().getDrawable(R.mipmap.item_collapsed));
+            iconImages.put(EnumIconImageId.EXPANDED.getValue(), getResources().getDrawable(R.mipmap.item_expanded));
+
+            // Setup components
             ListView treeviewListView = (ListView) findViewById(R.id.treeview_listview);
             treeview = new Treeview(this, treeviewListView, R.layout.treenode_item, iconImages);
             Treenode treenode1 = new Treenode("One");
@@ -34,6 +54,7 @@ public class MainActivity extends ActionBarActivity {
             treenode2.addNode(treenode22);
             treeview.addNode(treenode1);
             treeview.addNode(treenode2);
+            treeview.setIconImages(iconImages);
             treeview.invalidate();
         }
 
@@ -60,5 +81,12 @@ public class MainActivity extends ActionBarActivity {
         }
 
         return super.onOptionsItemSelected(item);
+    }
+
+    public void onMenuTestClick(MenuItem item) {
+        Treenode treenode = treeview.getSelected();
+        if (treenode != null) {
+            treenode.toggleExpansionState();
+        }
     }
 }

@@ -29,7 +29,7 @@ public class IndentableTextView extends TextView {
 
     @Override
     protected void onDraw(Canvas canvas) {
-
+        super.onDraw(canvas);
     }
 
 }
