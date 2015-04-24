@@ -10,8 +10,10 @@ import android.widget.ListView;
 import java.util.HashMap;
 import java.util.Map;
 
-import treeview.Treenode;
+import note.NoteNode;
+import treeview.TreeviewNode;
 import treeview.Treeview;
+import treeview.TreeviewUtils;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -46,18 +48,17 @@ public class MainActivity extends ActionBarActivity {
             // Setup components
             ListView treeviewListView = (ListView) findViewById(R.id.treeview_listview);
             treeview = new Treeview(this, treeviewListView, R.layout.treenode_item, iconImages);
-            Treenode treenode1 = new Treenode("One");
-            Treenode treenode2 = new Treenode("Two");
-            Treenode treenode21 = new Treenode("TwoOne");
-            Treenode treenode22 = new Treenode("TwoTwo");
-            treenode2.addNode(treenode21);
-            treenode2.addNode(treenode22);
-            treeview.addNode(treenode1);
-            treeview.addNode(treenode2);
+            TreeviewNode treeviewNode1 = new TreeviewNode("One");
+            TreeviewNode treeviewNode2 = new TreeviewNode("Two");
+            TreeviewNode treeviewNode21 = new TreeviewNode("TwoOne");
+            TreeviewNode treeviewNode22 = new TreeviewNode("TwoTwo");
+            treeviewNode2.addNode(treeviewNode21);
+            treeviewNode2.addNode(treeviewNode22);
+            treeview.addNode(treeviewNode1);
+            treeview.addNode(treeviewNode2);
             treeview.setIconImages(iconImages);
             treeview.invalidate();
         }
-
     }
 
 
@@ -84,9 +85,9 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public void onMenuTestClick(MenuItem item) {
-        Treenode treenode = treeview.getSelected();
-        if (treenode != null) {
-            treenode.toggleExpansionState();
+        TreeviewNode treeviewNode = treeview.getSelected();
+        if (treeviewNode != null) {
+            treeviewNode.toggleExpansionState();
         }
     }
 }

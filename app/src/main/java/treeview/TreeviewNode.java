@@ -2,15 +2,25 @@ package treeview;
 
 import android.graphics.drawable.Drawable;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonDeserializationContext;
+import com.google.gson.JsonDeserializer;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParseException;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
 import com.treeapps.newtreeview.MainActivity;
 
+import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.UUID;
 
 /**
  * Created by HeinrichWork on 23/04/2015.
  */
-public class Treenode {
+public class TreeviewNode extends Node<TreeviewNode> {
 
 
 
@@ -35,14 +45,16 @@ public class Treenode {
     private boolean boolIsDirty;
     private boolean boolIsDeleted;
 
-    // Application specific
-    private Object tag;
+
 
     // Items parent and children
-    private Treenode parent;
-    private ArrayList<Treenode> childTreenodes = new ArrayList<Treenode>();
+    private TreeviewNode parent;
+    private ArrayList<TreeviewNode> childTreeviewNodes = new ArrayList<TreeviewNode>();
 
-    public Treenode(String strDescription) {
+    // Application specific, not to be serialised
+    private transient Object tag;
+
+    public TreeviewNode(String strDescription) {
         this.strTreenodeUuid = UUID.randomUUID().toString();
 
         this.intExpandedIconId = MainActivity.EnumIconImageId.EXPANDED.getValue();
@@ -58,7 +70,7 @@ public class Treenode {
         this.enumTreenodeExpansionState = Treeview.EnumTreenodeExpansionState.EMPTY;
     }
 
-    public Treenode(Integer intExpandedIconId, Integer intCollapsedIconId, Integer intEmptyIconId, boolean boolIsNew, boolean boolIsHidden, boolean boolIsChecked, String strDescription, Drawable drawableMediaPreviewImage, boolean boolIsDirty, boolean boolIsDeleted, Treeview.EnumTreenodeExpansionState enumTreenodeExpansionState) {
+    public TreeviewNode(Integer intExpandedIconId, Integer intCollapsedIconId, Integer intEmptyIconId, boolean boolIsNew, boolean boolIsHidden, boolean boolIsChecked, String strDescription, Drawable drawableMediaPreviewImage, boolean boolIsDirty, boolean boolIsDeleted, Treeview.EnumTreenodeExpansionState enumTreenodeExpansionState) {
         this.strTreenodeUuid = UUID.randomUUID().toString();
         this.intExpandedIconId = intExpandedIconId;
         this.intCollapsedIconId = intCollapsedIconId;
@@ -171,19 +183,19 @@ public class Treenode {
         this.enumTreenodeExpansionState = enumTreenodeExpansionState;
     }
 
-    public ArrayList<Treenode> getChildTreenodes() {
-        return childTreenodes;
+    public ArrayList<TreeviewNode> getChildNodes() {
+        return childTreeviewNodes;
     }
 
-    public void setChildTreenodes(ArrayList<Treenode> childTreenodes) {
-        this.childTreenodes = childTreenodes;
+    public void setChildTreeviewNodes(ArrayList<TreeviewNode> childTreeviewNodes) {
+        this.childTreeviewNodes = childTreeviewNodes;
     }
 
-    public Treenode getParent() {
+    public TreeviewNode getParent() {
         return parent;
     }
 
-    public void setParent(Treenode parent) {
+    public void setParent(TreeviewNode parent) {
         this.parent = parent;
     }
 
@@ -204,9 +216,9 @@ public class Treenode {
     }
 
     // Methods
-    public void addNode(Treenode treenode) {
-        treenode.parent = this;
-        getChildTreenodes().add(treenode);
+    public void addNode(TreeviewNode treeviewNode) {
+        treeviewNode.parent = this;
+        getChildNodes().add(treeviewNode);
     }
 
     public void toggleExpansionState() {
@@ -223,4 +235,40 @@ public class Treenode {
         }
     }
 
+    private boolean boolItteratorHelper;
+    public boolean hasHiddenChildItems() {
+        boolItteratorHelper = false;
+        TreeIterator<TreeviewNode> treeIterator = new TreeIterator<>(this.getChildNodes());
+        treeIterator.execute(new TreeIterator.OnTouchAllNodesListener<TreeviewNode>() {
+            @Override
+            public boolean onNode(ArrayList<TreeviewNode> parentArrayList, TreeviewNode treeviewNode, int intLevel) {
+                if (treeviewNode.isHidden()) {
+                    boolItteratorHelper = true;
+                    return false;
+                }
+                return true;
+            }
+        });
+        return boolItteratorHelper;
+    }
+
+    public boolean hasNewChildItems() {
+        boolItteratorHelper = false;
+        TreeIterator<TreeviewNode> treeIterator = new TreeIterator<>(this.getChildNodes());
+        treeIterator.execute(new TreeIterator.OnTouchAllNodesListener<TreeviewNode>() {
+            @Override
+            public boolean onNode(ArrayList<TreeviewNode> parentArrayList, TreeviewNode treeviewNode, int intLevel) {
+                if (treeviewNode.isNew()) {
+                    boolItteratorHelper = true;
+                    return false;
+                }
+                return true;
+            }
+        });
+        return boolItteratorHelper;
+    }
+
+
 }
+
+

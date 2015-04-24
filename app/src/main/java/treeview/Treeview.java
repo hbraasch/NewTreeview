@@ -39,7 +39,7 @@ public class Treeview {
     }
 
     private Map<Integer,Drawable> iconImages = new HashMap<>();
-    private ArrayList<Treenode> childTreenodes = new ArrayList<Treenode>();
+    private ArrayList<TreeviewNode> childTreeviewNodes = new ArrayList<TreeviewNode>();
 
     private Context context;
     private ArrayList<ListViewListItem> listViewListItems;
@@ -47,10 +47,11 @@ public class Treeview {
     private ListView listView;
     private int intTreeNodeLayoutId;
     private boolean boolIsMultiSelectable;
-    ArrayList<Treenode> selectedTreenodes;
+    ArrayList<TreeviewNode> selectedTreeviewNodes;
 
     private boolean boolHiddenSelectionIsActive;
     private boolean boolIsHiddenActive;
+
 
     private boolean boolIsCheckList;
     private boolean boolIsCheckedItemsMadeHidden;
@@ -88,12 +89,12 @@ public class Treeview {
         this.iconImages = iconImages;
     }
 
-    public ArrayList<Treenode> getChildTreenodes() {
-        return childTreenodes;
+    public ArrayList<TreeviewNode> getChildTreeviewNodes() {
+        return childTreeviewNodes;
     }
 
-    public void setChildTreenodes(ArrayList<Treenode> childTreenodes) {
-        this.childTreenodes = childTreenodes;
+    public void setChildTreeviewNodes(ArrayList<TreeviewNode> childTreeviewNodes) {
+        this.childTreeviewNodes = childTreeviewNodes;
     }
 
     public boolean getMultiSelectable() {
@@ -136,24 +137,26 @@ public class Treeview {
         this.boolIsCheckedItemsMadeHidden = boolIsCheckedItemsMadeHidden;
     }
 
+
+
     // Methods
 
     public Treeview getTreeview() {
         return this;
     }
 
-    public void addNode(Treenode treenode) {
-        treenode.setParent(null);
-        getChildTreenodes().add(treenode);
+    public void addNode(TreeviewNode treeviewNode) {
+        treeviewNode.setParent(null);
+        getChildTreeviewNodes().add(treeviewNode);
     }
 
-    public void removeNode(final Treenode removeTreenode) {
-        TreeviewIterator treeviewIterator = new TreeviewIterator(getChildTreenodes());
-        treeviewIterator.execute(new TreeviewIterator.OnTouchAllNodesListener() {
+    public void removeNode(final TreeviewNode removeTreeviewNode) {
+        TreeIterator<TreeviewNode> treeIterator = new TreeIterator<>(getChildTreeviewNodes());
+        treeIterator.execute(new TreeIterator.OnTouchAllNodesListener<TreeviewNode>() {
             @Override
-            public boolean onNode(ArrayList<Treenode> parentArrayList, Treenode treenode, int intLevel) {
-                if (treenode.equals(removeTreenode)) {
-                    parentArrayList.remove(treenode);
+            public boolean onNode(ArrayList<TreeviewNode> parentArrayList, TreeviewNode treeviewNode, int intLevel) {
+                if (treeviewNode.equals(removeTreeviewNode)) {
+                    parentArrayList.remove(treeviewNode);
                     return true;
                 }
                 return false;
@@ -161,131 +164,132 @@ public class Treeview {
         });
     }
 
-    public Treenode getSelected() {
-        if (selectedTreenodes != null) {
-            if (selectedTreenodes.size() != 0) {
-                    return selectedTreenodes.get(0);
+    public TreeviewNode getSelected() {
+        if (selectedTreeviewNodes != null) {
+            if (selectedTreeviewNodes.size() != 0) {
+                    return selectedTreeviewNodes.get(0);
             }
         }
         return null;
     }
 
-    public ArrayList<Treenode> getAllSelected() {
-        return selectedTreenodes;
+    public ArrayList<TreeviewNode> getAllSelected() {
+        return selectedTreeviewNodes;
     }
 
     private ArrayList<ListViewListItem> generateListItems() {
         final ArrayList<ListViewListItem> listViewListItemsNew = new ArrayList<ListViewListItem>();
 
-        TreeviewIterator treeviewIterator = new TreeviewIterator(getChildTreenodes());
-        treeviewIterator.execute(new TreeviewIterator.OnTouchAllNodesListener() {
+        TreeIterator<TreeviewNode> treeIterator = new TreeIterator<>(getChildTreeviewNodes());
+        treeIterator.executeWithBranchDepthControllable(new TreeIterator.OnTouchAllNodesListener<TreeviewNode>() {
             @Override
-            public boolean onNode(ArrayList<Treenode> parentArrayList, Treenode treenode, int intLevel) {
+            public boolean onNode(ArrayList<TreeviewNode> parentArrayList, TreeviewNode treeviewNode, int intLevel) {
 
-                    // All items in this list will be displayed. To hide, do not put them in this list
-                    // Determine firstly if item needs to be displayed
+                // All items in this list will be displayed. To hide, do not put them in this list
+                // Determine firstly if item needs to be displayed
 
-                    // Evaluate deleted first
-                    if (treenode.isDeleted())
-                        return true;
+                // Evaluate deleted first
+                if (treeviewNode.isDeleted())
+                    return true;
 
-                    // Evaluate "hidden" next
-                    boolean boolDisplayItem = false;
-                    if (isHiddenSelectionActive()) {
-                        // Busy selecting items to hide, all must display
+                // Evaluate "hidden" next
+                boolean boolDisplayItem = false;
+                if (isHiddenSelectionActive()) {
+                    // Busy selecting items to hide, all must display
+                    boolDisplayItem = true;
+                } else {
+                    if (isHiddenActive() == false) {
+                        // Hidden is not activated, so display all
                         boolDisplayItem = true;
                     } else {
-                        if (isHiddenActive() == false) {
-                            // Hidden is not activated, so display all
-                            boolDisplayItem = true;
-                        } else {
-                            // Hidden is activated, so display only those marked as not hidden
-                            if (treenode.isHidden() == false) {
-                                boolDisplayItem = true;
-                            }
-                        }
-                    }
-
-                    if (boolDisplayItem == false) {
-                        return true;
-                    }
-
-                    // Now evaluate the checklist component
-                    boolDisplayItem = false;
-                    // Now check what happens if it is a checklist
-                    if (isCheckList()) {
-                        if (isCheckedItemsMadeHidden() == true) {
-                            // System is set to hide all checked items, so see if checked item
-                            if (treenode.isChecked() == false) {
-                                boolDisplayItem = true;
-                            }
-                        } else {
-                            // System not set to hide checked items, display all
+                        // Hidden is activated, so display only those marked as not hidden
+                        if (treeviewNode.isHidden() == false) {
                             boolDisplayItem = true;
                         }
-                    } else {
-                        // No checklist items, so display all
-                        boolDisplayItem = true;
-                    }
-
-                    if (boolDisplayItem == false) {
-                        return true;
-                    }
-
-                    // If to be displayed, add it to the list item collection
-                    intLevel += 1;
-
-                    ListViewListItem listItem = new ListViewListItem(getTreeview(), treenode, intLevel, null, null,EnumTreenodeNewItemType.OLD);
-
-                    // Fill in the _boolFolderHasHiddenItems property. If any child with hidden items, return true
-                    if ((objListItem.getItemType() == EnumFoldingType.FOLDER_COLLAPSED)
-                            || (objListItem.getItemType() == EnumFoldingType.FOLDER_EXPANDED)) {
-                        objListItem.setFolderHasHiddenItems(IsAnyHiddenItems(objTreeNode));
-                    }
-                    // Fill in the NewItem property
-                    objListItem.intNewItemType = EnumNewItemType.OLD;
-                    // If topmost item, determine if any children are new
-                    if (getParentTreeNode(objTreeNode) == null) {
-                        if (objTreeNode.boolIsNew) {
-                            // Topmost item, new
-                            if (IsChildItemNewItem(objTreeNode)) {
-                                objListItem.intNewItemType = EnumNewItemType.NEW_AND_ROOT_PARENT_OF_NEW;
-                            } else {
-                                objListItem.intNewItemType = EnumNewItemType.NEW;
-                            }
-                        } else {
-                            // Topmost item, old
-                            if (IsChildItemNewItem(objTreeNode)) {
-                                objListItem.intNewItemType = EnumNewItemType.ROOT_PARENT_OF_NEW;
-                            }
-                        }
-                    } else {
-                        // Leave item
-                        if (objTreeNode.boolIsNew) {
-                            // Leave item, new
-                            if (IsChildItemNewItem(objTreeNode)) {
-                                objListItem.intNewItemType = EnumNewItemType.NEW_AND_PARENT_OF_NEW;
-                            } else {
-                                objListItem.intNewItemType = EnumNewItemType.NEW;
-                            }
-                        } else {
-                            // Leave item, old
-                            if (IsChildItemNewItem(objTreeNode)) {
-                                objListItem.intNewItemType = EnumNewItemType.PARENT_OF_NEW;
-                            }
-                        }
-                    }
-
-                    objListItems.add(objListItem);
-
-                    if (objTreeNode.enumItemType == EnumFoldingType.FOLDER_COLLAPSED)
-                        return objListItems;
-
-                    for (clsTreeNode objChildTreeNode : objTreeNode.objChildren) {
-                        objListItems = getListItemsRecursively(objChildTreeNode, intLevel, objListItems);
                     }
                 }
-                return false;
+
+                if (boolDisplayItem == false) {
+                    return true;
+                }
+
+                // Now evaluate the checklist component
+                boolDisplayItem = false;
+                // Now check what happens if it is a checklist
+                if (isCheckList()) {
+                    if (isCheckedItemsMadeHidden() == true) {
+                        // System is set to hide all checked items, so see if checked item
+                        if (treeviewNode.isChecked() == false) {
+                            boolDisplayItem = true;
+                        }
+                    } else {
+                        // System not set to hide checked items, display all
+                        boolDisplayItem = true;
+                    }
+                } else {
+                    // No checklist items, so display all
+                    boolDisplayItem = true;
+                }
+
+                if (boolDisplayItem == false) {
+                    return true;
+                }
+
+                // If to be displayed, add it to the list item collection
+                intLevel += 1;
+                Treeview treeview = getTreeview();
+                ListViewListItem listItem = new ListViewListItem(treeview, treeviewNode, intLevel, null, null, EnumTreenodeNewItemType.OLD);
+
+                // Fill in the _boolFolderHasHiddenItems property. If any child with hidden items, return true
+                if ((treeviewNode.getExpansionState() == EnumTreenodeExpansionState.COLLAPSED)
+                        || (treeviewNode.getExpansionState() == EnumTreenodeExpansionState.EXPANDED)) {
+                    listItem.setHasHiddenItems(treeviewNode.hasHiddenChildItems());
+                }
+                // Fill in the NewItem property
+                listItem.setEnumNewItemType(EnumTreenodeNewItemType.OLD);
+                // If topmost item, determine if any children are new
+                if (treeviewNode.getParent() == null) {
+                    if (treeviewNode.isNew()) {
+                        // Topmost item, new
+                        if (treeviewNode.hasNewChildItems()) {
+                            listItem.setEnumNewItemType(EnumTreenodeNewItemType.NEW_AND_ROOT_PARENT_OF_NEW);
+                        } else {
+                            listItem.setEnumNewItemType(EnumTreenodeNewItemType.NEW);
+                        }
+                    } else {
+                        // Topmost item, old
+                        if (treeviewNode.hasNewChildItems()) {
+                            listItem.setEnumNewItemType(EnumTreenodeNewItemType.ROOT_PARENT_OF_NEW);
+                        }
+                    }
+                } else {
+                    // Leave item
+                    if (treeviewNode.isNew()) {
+                        // Leave item, new
+                        if (treeviewNode.hasNewChildItems()) {
+                            listItem.setEnumNewItemType(EnumTreenodeNewItemType.NEW_AND_PARENT_OF_NEW);
+                        } else {
+                            listItem.setEnumNewItemType(EnumTreenodeNewItemType.NEW);
+                        }
+                    } else {
+                        // Leave item, old
+                        if (treeviewNode.hasNewChildItems()) {
+                            listItem.setEnumNewItemType(EnumTreenodeNewItemType.PARENT_OF_NEW);
+                        }
+                    }
+                }
+
+                // Finally add to collection to make it visible
+                listViewListItemsNew.add(listItem);
+
+                // Collapse Expand handling
+                if (treeviewNode.getExpansionState() == EnumTreenodeExpansionState.COLLAPSED) {
+                    // Do not display children of this leave
+                    return false;   // Signal to iterator to leave this branch
+                }
+                return true;
+            }
+
 
         });
 
@@ -303,18 +307,18 @@ public class Treeview {
     private Drawable generateIconImageDrawable(ListViewListItem listViewListItem) {
         Resources resources = getContext().getResources();
         Treeview treeview = listViewListItem.getTreeview();
-        Treenode treenode = listViewListItem.getTreenode();
+        TreeviewNode treeviewNode = listViewListItem.getTreeviewNode();
         EnumTreenodeNewItemType enumNewItemType = listViewListItem.getEnumNewItemType();
-        EnumTreenodeExpansionState enumExpansionState = treenode.getExpansionState();
+        EnumTreenodeExpansionState enumExpansionState = treeviewNode.getExpansionState();
         int intLayerCount = 1;
-        boolean boolIsNew = treenode.isNew();
-        boolean boolIsHidden = treenode.isHidden();
+        boolean boolIsNew = treeviewNode.isNew();
+        boolean boolIsHidden = treeviewNode.isHidden();
         if (boolIsHidden) intLayerCount +=1;
         if (boolIsNew) intLayerCount +=1;
 
         Drawable[] layers = new Drawable[intLayerCount+1];
         // Main image
-        layers[0] = treeview.getIconImageDrawable(treenode.getEmptyIconId());
+        layers[0] = treeview.getIconImageDrawable(treeviewNode.getEmptyIconId());
 
         // Layer for NEW display
         if (intLayerCount > 1) {
@@ -370,11 +374,11 @@ public class Treeview {
     }
 
     private void setIsDirty(final boolean boolIsDirty) {
-        TreeviewIterator treeviewIterator = new TreeviewIterator(getChildTreenodes());
-        treeviewIterator.execute(new TreeviewIterator.OnTouchAllNodesListener() {
+        TreeIterator<TreeviewNode> treeIterator = new TreeIterator<>(getChildTreeviewNodes());
+        treeIterator.execute(new TreeIterator.OnTouchAllNodesListener<TreeviewNode>() {
             @Override
-            public boolean onNode(ArrayList<Treenode> parentArrayList, Treenode treenode, int intLevel) {
-                treenode.setDirty(boolIsDirty);
+            public boolean onNode(ArrayList<TreeviewNode> parentArrayList, TreeviewNode treeviewNode, int intLevel) {
+                treeviewNode.setDirty(boolIsDirty);
                 return false;
             }
         });
@@ -382,11 +386,11 @@ public class Treeview {
 
     private boolean boolItteration;
     private boolean isDirty() {
-        TreeviewIterator treeviewIterator = new TreeviewIterator(getChildTreenodes());
-        treeviewIterator.execute(new TreeviewIterator.OnTouchAllNodesListener() {
+        TreeIterator<TreeviewNode> treeIterator = new TreeIterator<>(getChildTreeviewNodes());
+        treeIterator.execute(new TreeIterator.OnTouchAllNodesListener<TreeviewNode>() {
             @Override
-            public boolean onNode(ArrayList<Treenode> parentArrayList, Treenode treenode, int intLevel) {
-                if (treenode.isDirty())  {
+            public boolean onNode(ArrayList<TreeviewNode> parentArrayList, TreeviewNode treeviewNode, int intLevel) {
+                if (treeviewNode.isDirty())  {
                     boolItteration = true;
                     return true;
                 }
@@ -423,21 +427,22 @@ public class Treeview {
 
 
         private Treeview treeview;
-        private Treenode treenode;
+        private TreeviewNode treeviewNode;
         private int intLevel;
         private EnumTreenodeListItemLevelRelation enumAboveRelation, enumBelowRelation;
         private EnumTreenodeNewItemType enumNewItemType;
+        private boolean boolHasHiddenItems;
 
 
 
         // Getters Setters
 
-        public Treenode getTreenode() {
-            return treenode;
+        public TreeviewNode getTreeviewNode() {
+            return treeviewNode;
         }
 
-        public void setTreenode(Treenode treenode) {
-            this.treenode = treenode;
+        public void setTreeviewNode(TreeviewNode treeviewNode) {
+            this.treeviewNode = treeviewNode;
         }
 
         public int getLevel() {
@@ -480,9 +485,18 @@ public class Treeview {
             this.enumNewItemType = enumNewItemType;
         }
 
-        ListViewListItem(Treeview treeview, Treenode treenode, int intLevel, EnumTreenodeListItemLevelRelation enumAboveRelation, EnumTreenodeListItemLevelRelation enumBelowRelation, EnumTreenodeNewItemType enumTreenodeNewItemType) {
+        public boolean hasHiddenItems() {
+            return boolHasHiddenItems;
+        }
+
+        public void setHasHiddenItems(boolean boolHasHiddenItems) {
+            this.boolHasHiddenItems = boolHasHiddenItems;
+        }
+
+
+        ListViewListItem(Treeview treeview, TreeviewNode treeviewNode, int intLevel, EnumTreenodeListItemLevelRelation enumAboveRelation, EnumTreenodeListItemLevelRelation enumBelowRelation, EnumTreenodeNewItemType enumTreenodeNewItemType) {
             this.treeview = treeview;
-            this.treenode = treenode;
+            this.treeviewNode = treeviewNode;
             this.intLevel = intLevel;
             this.enumAboveRelation = enumAboveRelation;
             this.enumBelowRelation = enumBelowRelation;
@@ -529,7 +543,7 @@ public class Treeview {
             RelativeLayout relativeView;
             ListViewListItem listViewListItem = getItem(position);
             Treeview treeview = listViewListItem.getTreeview();
-            Treenode treenode = listViewListItem.getTreenode();
+            TreeviewNode treeviewNode = listViewListItem.getTreeviewNode();
 
             if (convertView == null) {
                 relativeView = new RelativeLayout(getContext());
@@ -551,7 +565,7 @@ public class Treeview {
 
             // Setup description
             textViewDescription = (IndentableTextView) relativeView.findViewById(R.id.treenode_description);
-            textViewDescription.setText(listViewListItem.getLevel() + ": " + treenode.getDescription());
+            textViewDescription.setText(listViewListItem.getLevel() + ": " + treeviewNode.getDescription());
 
             // Setup media preview image
             return relativeView;
@@ -565,13 +579,13 @@ public class Treeview {
 
                 ListViewListItem listItemClicked = (ListViewListItem) iconImageView.getTag();
                 Treeview treeview = listItemClicked.getTreeview();
-                Treenode treenodeClicked = listItemClicked.getTreenode();
+                TreeviewNode treeviewNodeClicked = listItemClicked.getTreeviewNode();
 
-                if (treenodeClicked.getExpansionState() == EnumTreenodeExpansionState.COLLAPSED) {
-                    treenodeClicked.setExpansionState(EnumTreenodeExpansionState.EXPANDED);
+                if (treeviewNodeClicked.getExpansionState() == EnumTreenodeExpansionState.COLLAPSED) {
+                    treeviewNodeClicked.setExpansionState(EnumTreenodeExpansionState.EXPANDED);
                     treeview.setIsDirty(true);
-                } else if (treenodeClicked.getExpansionState() == EnumTreenodeExpansionState.EXPANDED) {
-                    treenodeClicked.setExpansionState(EnumTreenodeExpansionState.COLLAPSED);
+                } else if (treeviewNodeClicked.getExpansionState() == EnumTreenodeExpansionState.EXPANDED) {
+                    treeviewNodeClicked.setExpansionState(EnumTreenodeExpansionState.COLLAPSED);
                     treeview.setIsDirty(true);
                 } else {
                     return;
