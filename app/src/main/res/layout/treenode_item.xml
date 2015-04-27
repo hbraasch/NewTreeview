@@ -5,7 +5,8 @@
     android:layout_gravity="center_vertical"
 	android:gravity="center_vertical"
     android:singleLine="false"
-    android:orientation="horizontal">
+    android:orientation="horizontal"
+    android:background="@color/white_background">
 
     <ImageView
         android:id="@+id/treenode_icon"

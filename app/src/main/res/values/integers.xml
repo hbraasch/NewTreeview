@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <integer name="treeview_select_line_width_in_dp">2</integer>
+    <integer name="treeview_indent_radius_in_dp">10</integer>
+    <integer name="treeview_text_size_in_dp">10</integer>
+</resources>

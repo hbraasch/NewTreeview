@@ -5,7 +5,7 @@ import java.util.ArrayList;
 /**
  * Created by HeinrichWork on 4/04/2015.
  */
-public class TreeIterator<T extends Node<T>> {
+public class TreeIterator<T extends NodeBase<T>> {
 
     private ArrayList<T> rootTreenodes;
     private OnTouchAllNodesListener onNodeTouchedListener;
@@ -18,7 +18,7 @@ public class TreeIterator<T extends Node<T>> {
          * @param parentArrayList parent collection containing this node
          * @param treenode the current node under inspection
          * @param intLevel indentation level (topmost level index = 0)
-         * @return if true, itteration stops immediately. If false, itteration continue
+         * @return used to control execution flow (depends in which exec its used)
          */
         public boolean onNode(ArrayList<T> parentArrayList, T treenode, int intLevel);
     }
@@ -50,7 +50,8 @@ public class TreeIterator<T extends Node<T>> {
 
     /**
      * Used to touch all nodes, when a callback returns true, stop
-     * @param onTouchAllNodesListener
+     * When TouchTreeNodesRecursively
+     * @param onTouchAllNodesListener - if onNode returns true, execution stops immediately
      */
     public void execute(OnTouchAllNodesListener onTouchAllNodesListener) {
         int intLevel;
@@ -64,7 +65,7 @@ public class TreeIterator<T extends Node<T>> {
     /**
      * Used to traverse up the parent chain
      * @param startNode
-     * @param onTouchAllParentNodesListener
+     * @param onTouchAllParentNodesListener - if onNode returns true, execution stops immediately
      */
     public void execute(T startNode, OnTouchAllParentNodesListener onTouchAllParentNodesListener) {
         T parent = startNode.getParent();
@@ -76,7 +77,7 @@ public class TreeIterator<T extends Node<T>> {
 
     /**
      * Used to touch all nodes, but when a callback returns true, stop traversing the current branch
-     * @param onTouchAllNodesListener
+     * @param onTouchAllNodesListener - if onNode returns true, traversing stops at that branch (not going deeper)
      */
     public void executeWithBranchDepthControllable(OnTouchAllNodesListener onTouchAllNodesListener) {
         int intLevel;
@@ -104,7 +105,7 @@ public class TreeIterator<T extends Node<T>> {
 
     private  boolean TouchTreeNodesRecursively(ArrayList<T> parentArrayList, T treenode, int intLevel) {
         intLevel += 1;
-        if (ProcessTreeNode(parentArrayList, treenode, intLevel-1)) return true;
+        if (onNodeTouchedListener.onNode(parentArrayList, treenode, intLevel-1)) return true;
         for(T childTreenode : treenode.getChildNodes()) {
             if (TouchTreeNodesRecursively(treenode.getChildNodes(), childTreenode, intLevel)) return true;
         }
@@ -113,23 +114,13 @@ public class TreeIterator<T extends Node<T>> {
 
     private void TouchTreeNodesRecursivelyWithBranchDeptControl(ArrayList<T> parentArrayList, T treenode, int intLevel) {
         intLevel += 1;
-        if (!ProcessTreeNode(parentArrayList, treenode, intLevel-1))  {
+        if (onNodeTouchedListener.onNode(parentArrayList, treenode, intLevel-1)) {
+            return;
+        } else {
             // Only follow child nodes of previous ProcessTreeNode returned false
             for(T childTreenode : treenode.getChildNodes()) {
                 TouchTreeNodesRecursively(treenode.getChildNodes(), childTreenode, intLevel);
             }
         }
     }
-
-    /**
-     * Get consumed when returning "true"
-     * @param parentArrayList
-     * @param treenode
-     * @param intLevel
-     * @return
-     */
-    public <T> boolean ProcessTreeNode(ArrayList<T> parentArrayList, T treenode, int intLevel) {
-        return onNodeTouchedListener.onNode(parentArrayList, treenode, intLevel);
-    }
-
 }

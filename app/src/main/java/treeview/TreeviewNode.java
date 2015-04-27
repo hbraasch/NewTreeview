@@ -2,25 +2,15 @@ package treeview;
 
 import android.graphics.drawable.Drawable;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonDeserializationContext;
-import com.google.gson.JsonDeserializer;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParseException;
-import com.google.gson.JsonPrimitive;
-import com.google.gson.JsonSerializationContext;
-import com.google.gson.JsonSerializer;
 import com.treeapps.newtreeview.MainActivity;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.UUID;
 
 /**
  * Created by HeinrichWork on 23/04/2015.
  */
-public class TreeviewNode extends Node<TreeviewNode> {
+public class TreeviewNode implements NodeBase<TreeviewNode> {
 
 
 
@@ -28,9 +18,7 @@ public class TreeviewNode extends Node<TreeviewNode> {
     private String strTreenodeUuid;
 
     // Item row data
-    private Integer intExpandedIconId;
-    private Integer intCollapsedIconId;
-    private Integer intEmptyIconId;
+    private Integer intIconId;
     private boolean boolIsNew;
     private  boolean boolIsHidden;
     private boolean boolIsChecked;
@@ -56,10 +44,7 @@ public class TreeviewNode extends Node<TreeviewNode> {
 
     public TreeviewNode(String strDescription) {
         this.strTreenodeUuid = UUID.randomUUID().toString();
-
-        this.intExpandedIconId = MainActivity.EnumIconImageId.EXPANDED.getValue();
-        this.intCollapsedIconId = MainActivity.EnumIconImageId.COLLAPSED.getValue();
-        this.intEmptyIconId = MainActivity.EnumIconImageId.EMPTY.getValue();
+        this.intIconId = MainActivity.EnumIconImageId.EMPTY.getValue();
         this.boolIsNew = false;
         this.boolIsHidden = false;
         this.boolIsChecked = false;
@@ -70,11 +55,9 @@ public class TreeviewNode extends Node<TreeviewNode> {
         this.enumTreenodeExpansionState = Treeview.EnumTreenodeExpansionState.EMPTY;
     }
 
-    public TreeviewNode(Integer intExpandedIconId, Integer intCollapsedIconId, Integer intEmptyIconId, boolean boolIsNew, boolean boolIsHidden, boolean boolIsChecked, String strDescription, Drawable drawableMediaPreviewImage, boolean boolIsDirty, boolean boolIsDeleted, Treeview.EnumTreenodeExpansionState enumTreenodeExpansionState) {
-        this.strTreenodeUuid = UUID.randomUUID().toString();
-        this.intExpandedIconId = intExpandedIconId;
-        this.intCollapsedIconId = intCollapsedIconId;
-        this.intEmptyIconId = intEmptyIconId;
+    public TreeviewNode(String strUuid, Integer intIconId, boolean boolIsNew, boolean boolIsHidden, boolean boolIsChecked, String strDescription, Drawable drawableMediaPreviewImage, boolean boolIsDirty, boolean boolIsDeleted, Treeview.EnumTreenodeExpansionState enumTreenodeExpansionState) {
+        this.strTreenodeUuid = strUuid;
+        this.intIconId = intIconId;
         this.boolIsNew = boolIsNew;
         this.boolIsHidden = boolIsHidden;
         this.boolIsChecked = boolIsChecked;
@@ -95,28 +78,12 @@ public class TreeviewNode extends Node<TreeviewNode> {
         this.strTreenodeUuid = strTreenodeUuid;
     }
 
-    public Integer getExpandedIconId() {
-        return intExpandedIconId;
-    }
-
-    public void setExpandedIconId(Integer intExpandedIconId) {
-        this.intExpandedIconId = intExpandedIconId;
-    }
-
-    public Integer getCollapsedIconId() {
-        return intCollapsedIconId;
-    }
-
-    public void setCollapsedIconId(Integer intCollapsedIconId) {
-        this.intCollapsedIconId = intCollapsedIconId;
-    }
-
-    public Integer getEmptyIconId() {
-        return intEmptyIconId;
+    public Integer getIconId() {
+        return intIconId;
     }
 
     public void setEmptyIconId(Integer intEmptyIconId) {
-        this.intEmptyIconId = intEmptyIconId;
+        this.intIconId = intEmptyIconId;
     }
 
     public boolean isDirty() {

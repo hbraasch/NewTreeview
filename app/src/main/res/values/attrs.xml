@@ -1,0 +1,5 @@
+<resources>
+    <declare-styleable name="Treeview">
+        <attr name="textsize" format="integer" />
+    </declare-styleable>
+</resources>

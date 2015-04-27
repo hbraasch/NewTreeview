@@ -2,23 +2,23 @@ package note;
 
 import java.util.ArrayList;
 
-import treeview.Node;
-
 /**
- * Created by HeinrichWork on 25/04/2015.
+ * Created by HeinrichWork on 26/04/2015.
  */
-public class NoteNode extends Node<NoteNode> {
+public class NoteNode extends NoteNodeBase<NoteNode> {
 
-    // Node unique key
-    public String strTreenodeUuid;
+    public NoteNode(String strDescription)
+    {
+        setDescription(strDescription);
+    }
 
     @Override
     public ArrayList<NoteNode> getChildNodes() {
-        return null;
+        return children;
     }
 
     @Override
     public NoteNode getParent() {
-        return null;
+        return parent;
     }
 }

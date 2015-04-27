@@ -5,15 +5,15 @@ import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ListView;
 
 import java.util.HashMap;
 import java.util.Map;
 
+import note.Note;
 import note.NoteNode;
+import treeview.TreeAdapter;
 import treeview.TreeviewNode;
 import treeview.Treeview;
-import treeview.TreeviewUtils;
 
 
 public class MainActivity extends ActionBarActivity {
@@ -33,31 +33,42 @@ public class MainActivity extends ActionBarActivity {
     Treeview treeview;
     Map<Integer,Drawable> iconImages;
 
+    Note note = new Note();
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
         if (savedInstanceState == null) {
-            // Set up values
+
+            // Set up test values
             iconImages = new HashMap<Integer,Drawable>();
             iconImages.put(EnumIconImageId.EMPTY.getValue(), getResources().getDrawable(R.mipmap.item_empty));
             iconImages.put(EnumIconImageId.COLLAPSED.getValue(), getResources().getDrawable(R.mipmap.item_collapsed));
             iconImages.put(EnumIconImageId.EXPANDED.getValue(), getResources().getDrawable(R.mipmap.item_expanded));
 
+            NoteNode noteNode1 = new NoteNode("One");
+            NoteNode noteNode2 = new NoteNode("Two");
+            NoteNode noteNode21 = new NoteNode("TwoOne");
+            NoteNode noteNode22 = new NoteNode("TwoTwo");
+            noteNode2.getChildNodes().add(noteNode21);
+            noteNode2.getChildNodes().add(noteNode22);
+
+            note.getChildNodes().add(noteNode1);
+            note.getChildNodes().add(noteNode2);
+
             // Setup components
-            ListView treeviewListView = (ListView) findViewById(R.id.treeview_listview);
-            treeview = new Treeview(this, treeviewListView, R.layout.treenode_item, iconImages);
-            TreeviewNode treeviewNode1 = new TreeviewNode("One");
-            TreeviewNode treeviewNode2 = new TreeviewNode("Two");
-            TreeviewNode treeviewNode21 = new TreeviewNode("TwoOne");
-            TreeviewNode treeviewNode22 = new TreeviewNode("TwoTwo");
-            treeviewNode2.addNode(treeviewNode21);
-            treeviewNode2.addNode(treeviewNode22);
-            treeview.addNode(treeviewNode1);
-            treeview.addNode(treeviewNode2);
-            treeview.setIconImages(iconImages);
-            treeview.invalidate();
+            treeview = (Treeview) findViewById(R.id.treeview);
+            TreeAdapter treeAdapter = new TreeAdapter<NoteNode>(note.getChildNodes()) {
+                @Override
+                public TreeviewNode convertSourceToTreeNode(NoteNode sourceNode) {
+                    return new TreeviewNode(sourceNode.getDescription()) ;
+                }
+            };
+            treeview.setAdapter(treeAdapter, R.layout.treenode_item, iconImages, 10, getResources().getColor(R.color.treeview_select_color),
+                    getResources().getInteger(R.integer.treeview_text_size_in_dp),
+                    getResources().getInteger(R.integer.treeview_indent_radius_in_dp));
         }
     }
 
@@ -85,7 +96,7 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public void onMenuTestClick(MenuItem item) {
-        TreeviewNode treeviewNode = treeview.getSelected();
+        TreeviewNode treeviewNode = treeview.getSelectedFirst();
         if (treeviewNode != null) {
             treeviewNode.toggleExpansionState();
         }

@@ -12,13 +12,10 @@ import com.google.gson.JsonSerializer;
 
 import java.lang.reflect.Type;
 
-import treeview.Node;
-import treeview.TreeviewNode;
-
 /**
  * Created by HeinrichWork on 25/04/2015.
  */
-public class NoteNodeTypeAdapter<T extends Node> implements JsonSerializer<T>, JsonDeserializer<T> {
+public class NoteNodeTypeAdapter<T extends NoteNode> implements JsonSerializer<T>, JsonDeserializer<T> {
 
     @Override
     public JsonElement serialize(T src, Type typeOfSrc, JsonSerializationContext context) {
