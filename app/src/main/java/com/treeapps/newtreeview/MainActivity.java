@@ -58,17 +58,26 @@ public class MainActivity extends ActionBarActivity {
             note.getChildNodes().add(noteNode1);
             note.getChildNodes().add(noteNode2);
 
+
+            for (int i = 0; i < 20; i++) {
+                NoteNode noteNode = new NoteNode("Node " + i);
+                note.getChildNodes().add(noteNode);
+            }
+
+
             // Setup components
             treeview = (Treeview) findViewById(R.id.treeview);
+            treeview.setParameters(R.layout.treenode_item, iconImages, 10, getResources().getColor(R.color.treeview_select_color),
+                    getResources().getInteger(R.integer.treeview_text_size_in_dp),
+                    getResources().getInteger(R.integer.treeview_indent_radius_in_dp));
+            treeview.setIsCheckList(true);
             TreeAdapter treeAdapter = new TreeAdapter<NoteNode>(note.getChildNodes()) {
                 @Override
                 public TreeviewNode convertSourceToTreeNode(NoteNode sourceNode) {
                     return new TreeviewNode(sourceNode.getDescription()) ;
                 }
             };
-            treeview.setAdapter(treeAdapter, R.layout.treenode_item, iconImages, 10, getResources().getColor(R.color.treeview_select_color),
-                    getResources().getInteger(R.integer.treeview_text_size_in_dp),
-                    getResources().getInteger(R.integer.treeview_indent_radius_in_dp));
+            treeview.setAdapter(treeAdapter);
         }
     }
 

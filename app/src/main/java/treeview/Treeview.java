@@ -1,20 +1,27 @@
 package treeview;
 
+import android.annotation.TargetApi;
+import android.app.AlertDialog;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
+import android.os.Build;
 import android.util.AttributeSet;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
+import android.widget.CheckBox;
 import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.RelativeLayout;
+import android.widget.TextView;
+import android.widget.Toast;
 
 import com.treeapps.newtreeview.R;
 
@@ -43,6 +50,7 @@ public class Treeview extends LinearLayout {
         OLD, NEW, NEW_AND_PARENT_OF_NEW, NEW_AND_ROOT_PARENT_OF_NEW, PARENT_OF_NEW, ROOT_PARENT_OF_NEW
     }
 
+
     private Map<Integer,Drawable> iconImages = new HashMap<>();
     private ArrayList<TreeviewNode> childNodes = new ArrayList<TreeviewNode>();
 
@@ -52,7 +60,8 @@ public class Treeview extends LinearLayout {
     private ListView listView;
     private int intTreeNodeLayoutId;
     private boolean boolIsMultiSelectable;
-    ArrayList<TreeviewNode> selectedTreeviewNodes;
+    private boolean boolIsCheckboxLongClickEnabled;
+    private ArrayList<TreeviewNode> selectedTreeviewNodes;
     private int intTextSizeInSp;
 
     private boolean boolHiddenSelectionIsActive;
@@ -66,11 +75,15 @@ public class Treeview extends LinearLayout {
     protected int intSelectColor;
     protected int intIndentRadiusInDp;
 
+
+
     public Treeview(Context context) {
         super(context);
         this.listView = new ListView(getContext());
         addView(this.listView);
     }
+
+
 
     public Treeview(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -104,8 +117,7 @@ public class Treeview extends LinearLayout {
         }
     }
 
-
-    public void setAdapter(TreeAdapter treeAdapter, int intTreeNodeLayoutId, Map<Integer,Drawable> iconImages, int intMaxIndentLevel, int intSelectColor, int intTextSizeInSp, int intIndentRadiusInDp) {
+    public void setParameters(int intTreeNodeLayoutId, Map<Integer,Drawable> iconImages, int intMaxIndentLevel, int intSelectColor, int intTextSizeInSp, int intIndentRadiusInDp) {
 
         // General initialisation
         this.intTreeNodeLayoutId = intTreeNodeLayoutId;
@@ -126,7 +138,12 @@ public class Treeview extends LinearLayout {
         boolIsCheckList = false;
         boolIsCheckedItemsMadeHidden = false;
 
-        // Set adapter
+    }
+
+
+    public void setAdapter(TreeAdapter treeAdapter) {
+
+        // Adapter
         this.treeAdapter = treeAdapter;
         treeAdapter.setTreeview(this);
         childNodes = treeAdapter.adapt();
@@ -192,13 +209,21 @@ public class Treeview extends LinearLayout {
         this.boolIsCheckedItemsMadeHidden = boolIsCheckedItemsMadeHidden;
     }
 
+    public boolean isCheckboxLongClickEnabled() {
+        return boolIsCheckboxLongClickEnabled;
+    }
 
+    public void setIsCheckboxLongClickEnabled(boolean boolIsCheckboxLongClickEnabled) {
+        this.boolIsCheckboxLongClickEnabled = boolIsCheckboxLongClickEnabled;
+    }
 
     // Methods
 
     public Treeview getTreeview() {
         return this;
     }
+
+
 
     public void addNode(TreeviewNode treeviewNode) {
         treeviewNode.setParent(null);
@@ -300,7 +325,7 @@ public class Treeview extends LinearLayout {
                 // Fill in the _boolFolderHasHiddenItems property. If any child with hidden items, return true
                 if ((treeviewNode.getExpansionState() == EnumTreenodeExpansionState.COLLAPSED)
                         || (treeviewNode.getExpansionState() == EnumTreenodeExpansionState.EXPANDED)) {
-                    listItem.setHasHiddenItems(treeviewNode.hasHiddenChildItems());
+                    listItem.setHasHiddenItems(treeviewNode.isAnyChildrenHidden());
                 }
                 // Fill in the NewItem property
                 listItem.setEnumNewItemType(EnumTreenodeNewItemType.OLD);
@@ -308,14 +333,14 @@ public class Treeview extends LinearLayout {
                 if (treeviewNode.getParent() == null) {
                     if (treeviewNode.isNew()) {
                         // Topmost item, new
-                        if (treeviewNode.hasNewChildItems()) {
+                        if (treeviewNode.hasNewChildren()) {
                             listItem.setEnumNewItemType(EnumTreenodeNewItemType.NEW_AND_ROOT_PARENT_OF_NEW);
                         } else {
                             listItem.setEnumNewItemType(EnumTreenodeNewItemType.NEW);
                         }
                     } else {
                         // Topmost item, old
-                        if (treeviewNode.hasNewChildItems()) {
+                        if (treeviewNode.hasNewChildren()) {
                             listItem.setEnumNewItemType(EnumTreenodeNewItemType.ROOT_PARENT_OF_NEW);
                         }
                     }
@@ -323,14 +348,14 @@ public class Treeview extends LinearLayout {
                     // Leave item
                     if (treeviewNode.isNew()) {
                         // Leave item, new
-                        if (treeviewNode.hasNewChildItems()) {
+                        if (treeviewNode.hasNewChildren()) {
                             listItem.setEnumNewItemType(EnumTreenodeNewItemType.NEW_AND_PARENT_OF_NEW);
                         } else {
                             listItem.setEnumNewItemType(EnumTreenodeNewItemType.NEW);
                         }
                     } else {
                         // Leave item, old
-                        if (treeviewNode.hasNewChildItems()) {
+                        if (treeviewNode.hasNewChildren()) {
                             listItem.setEnumNewItemType(EnumTreenodeNewItemType.PARENT_OF_NEW);
                         }
                     }
@@ -521,7 +546,6 @@ public class Treeview extends LinearLayout {
         private Treeview treeview;
         private TreeviewNode treeviewNode;
         private int intLevel;
-        private boolean boolIsSelected;
         private EnumTreenodeListItemLevelRelation enumAboveRelation, enumBelowRelation;
         private EnumTreenodeNewItemType enumNewItemType;
         private boolean boolHasHiddenItems;
@@ -586,14 +610,6 @@ public class Treeview extends LinearLayout {
             this.boolHasHiddenItems = boolHasHiddenItems;
         }
 
-        public boolean isSelected() {
-            return boolIsSelected;
-        }
-
-        public void setIsSelected(boolean boolIsSelected) {
-            this.boolIsSelected = boolIsSelected;
-        }
-
         ListViewListItem(Treeview treeview, TreeviewNode treeviewNode, int intLevel, EnumTreenodeListItemLevelRelation enumAboveRelation, EnumTreenodeListItemLevelRelation enumBelowRelation, EnumTreenodeNewItemType enumTreenodeNewItemType) {
             this.treeview = treeview;
             this.treeviewNode = treeviewNode;
@@ -607,6 +623,9 @@ public class Treeview extends LinearLayout {
      * TreeviewArrayAdapter
      */
     class TreeviewArrayAdapter extends ArrayAdapter<ListViewListItem> {
+
+        private final int DP_2_IN_PX = TreeviewUtils.dpToPx(getContext(),2);
+        private final int DP_5_IN_PX = TreeviewUtils.dpToPx(getContext(),5);
 
         private int intResourceId;
         private  List<ListViewListItem> listViewListItems;
@@ -638,10 +657,11 @@ public class Treeview extends LinearLayout {
         @Override
         public View getView(int position, View convertView, ViewGroup parent) {
 
+            int sdk = android.os.Build.VERSION.SDK_INT;
             RelativeLayout relativeView;
-            ListViewListItem listViewListItem = getItem(position);
-            Treeview treeview = listViewListItem.getTreeview();
-            TreeviewNode treeviewNode = listViewListItem.getTreeviewNode();
+            final ListViewListItem listViewListItem = getItem(position);
+            final Treeview treeview = listViewListItem.getTreeview();
+            final TreeviewNode treeviewNode = listViewListItem.getTreeviewNode();
 
             if (convertView == null) {
                 relativeView = new RelativeLayout(getContext());
@@ -660,6 +680,76 @@ public class Treeview extends LinearLayout {
             iconImageView.setImageDrawable(treeview.generateIconImageDrawable(listViewListItem));
 
             // Setup checkbox
+            // Checklist or Hide activities
+            final CheckBox checkbox = (CheckBox) relativeView.findViewById(R.id.treenode_checkbox);
+            if(sdk < android.os.Build.VERSION_CODES.JELLY_BEAN) {
+                LinearLayout.LayoutParams params = (LinearLayout.LayoutParams)checkbox.getLayoutParams();
+                params.setMargins(0, 0, DP_5_IN_PX, 0); //substitute parameters for left, top, right, bottom
+                checkbox.setLayoutParams(params);
+            }
+            setCheckboxVisibilityBasedOnSettings(checkbox, treeview.isCheckList(), treeview.isHiddenSelectionActive());
+            if ( treeview.isHiddenSelectionActive() == false) {
+                // Hide selection is inactive
+                if (treeview.isCheckList()) {
+                    // Checklist activities
+                    // Set items depending on checklist type note
+                    if (treeview.isCheckboxLongClickEnabled() == false) {
+                        checkbox.setOnClickListener(new OnClickListener() {
+                            @Override
+                            public void onClick (View view) {
+                                handleCheckBoxTriggerEvent((CheckBox) view, listViewListItem);
+                            }
+                        });
+                    } else {
+                        checkbox.setOnClickListener(new OnClickListener() {
+                            @Override
+                            public void onClick (View view) {
+                                ((CheckBox) view).setChecked(!((CheckBox) view).isChecked()); // Need to revert the selection if it gets triggered
+                                Toast.makeText(getContext(), "Long click to check or uncheck", Toast.LENGTH_SHORT).show();
+                                invalidate();
+                            }
+                        });
+                        checkbox.setLongClickable(true);
+                        checkbox.setOnLongClickListener(new View.OnLongClickListener() {
+                            @Override
+                            public boolean onLongClick(View view) {
+                                ((CheckBox) view).setChecked(!((CheckBox) view).isChecked()); // LongClick logic is reverse to OnClick, need to invert setting before calling next method
+                                handleCheckBoxTriggerEvent((CheckBox) view, listViewListItem);
+                                invalidate();
+                                return true;
+                            }
+                        });
+                    }
+
+                    if (treeviewNode.isChecked()) {
+                        checkbox.setChecked(true);
+                    } else {
+                        checkbox.setChecked(false);
+                    }
+
+                    // End of checklist activities
+                }
+
+            } else {
+                // Hide selection is active
+                checkbox.setOnClickListener(new OnClickListener() {
+
+                    @Override
+                    public void onClick(View view) {
+                        if (((CheckBox) view).isChecked()) {
+                            treeviewNode.setChildrenHidden(true);
+                        } else {
+                            treeviewNode.setChildrenHidden(false);
+                        }
+                    }
+                });
+                if (treeviewNode.isHidden()) {
+                    checkbox.setChecked(true);
+                } else {
+                    checkbox.setChecked(false);
+                }
+
+            }
 
 
             // Setup media preview image
@@ -682,10 +772,124 @@ public class Treeview extends LinearLayout {
 
             // Setup description (must be last because its custom and need sizes from already defined components
             IndentableTextView textViewDescription = (IndentableTextView) relativeView.findViewById(R.id.treenode_description);
-            textViewDescription.setProperties(listViewListItem,rectPreviewImageSizeInPx.height(),rectPreviewImageSizeInPx.width(),intMaxIndentLevel, intSelectColor, intTextSizeInSp, intIndentRadiusInDp);
+            textViewDescription.setTag(listViewListItem);
+            textViewDescription.setProperties(listViewListItem, rectPreviewImageSizeInPx.height(), rectPreviewImageSizeInPx.width(), intMaxIndentLevel, intSelectColor, intTextSizeInSp, intIndentRadiusInDp);
+            textViewDescription.setOnLongClickListener(new TextViewDescriptionOnLongClickListener());
 
             // Done
             return relativeView;
+        }
+
+        private void handleCheckBoxTriggerEvent(CheckBox checkBox, ListViewListItem listViewListItem) {
+            final TreeviewNode treeviewNode = listViewListItem.getTreeviewNode();
+            if (checkBox.isChecked()) {
+                // Checked
+                if (treeviewNode.getExpansionState() != EnumTreenodeExpansionState.EMPTY) {
+                    // Not empty
+                    if (treeviewNode.isAnyChildrenChecked() == false) {
+                        // If checkbox is on a parent, ask user if
+                        // he wants all children checked
+                        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                        builder.setTitle("All items below will be checked also. Do you want to proceed?");
+                        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                treeviewNode.setChildrenChecked(true);
+                                invalidate();
+                            }
+                        });
+                        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                                treeviewNode.setChecked(false);
+                                dialog.cancel();
+                                invalidate();
+
+                            }
+                        });
+                        builder.show();
+                    }
+                }
+                // If checkbox is on a child, just carry on checking it
+                treeviewNode.setChecked(true);
+                invalidate();
+            } else {
+                // Unchecked
+                if (treeviewNode.getExpansionState() != EnumTreenodeExpansionState.EMPTY) {
+                    // Not empty
+                    if (treeviewNode.getChildNodes().isEmpty() == false) {
+                        // If checkbox is on a parent, ask user if he wants all children unchecked
+                        AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                        builder.setTitle("All items below will be unchecked also. Do you want to proceed?");
+                        builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                                treeviewNode.setChildrenChecked(false);
+                                invalidate();
+                            }
+                        });
+                        builder.setNeutralButton("Unchecked only", new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+
+                                treeviewNode.setChecked(false);
+                                invalidate();
+                            }
+                        });
+                        builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+
+                            @Override
+                            public void onClick(DialogInterface dialog, int which) {
+                                treeviewNode.setChecked(true);
+                                dialog.cancel();
+                                invalidate();
+                            }
+                        });
+                        builder.show();
+                    } else {
+                        treeviewNode.setChildrenChecked(false);
+                        invalidate();
+                    }
+                }
+
+                // If checkbox is on a child, just carry on un-checking it
+                treeviewNode.setChecked(false);
+                // Uncheck all parents because if any child unchecked, no parent can be set
+                treeviewNode.setParentsChecked(false);
+
+                invalidate();;
+            }
+        }
+
+        @TargetApi(Build.VERSION_CODES.JELLY_BEAN)
+        private void setCheckboxVisibilityBasedOnSettings(CheckBox checkbox, boolean isCheckList, boolean isHiddenSelectionActive)  {
+            int sdk = android.os.Build.VERSION.SDK_INT;
+            Context context = getContext();
+            // Override by other activities
+            checkbox.setVisibility(View.GONE);
+            if (isHiddenSelectionActive) {
+                checkbox.setVisibility(View.VISIBLE);
+                if(sdk < android.os.Build.VERSION_CODES.JELLY_BEAN) {
+                    checkbox.setButtonDrawable(R.drawable.custom_check_box_red);
+                } else {
+                    checkbox.setBackground(context.getResources().getDrawable( R.drawable.custom_check_box_red));
+                }
+                return;
+            }
+            if (isCheckList) {
+                checkbox.setVisibility(View.VISIBLE);
+                if(sdk < android.os.Build.VERSION_CODES.JELLY_BEAN) {
+                    checkbox.setButtonDrawable(R.drawable.custom_check_box_black);
+                } else {
+                    checkbox.setBackground(context.getResources().getDrawable( R.drawable.custom_check_box_black));
+                }
+            }
         }
 
         private Rect determinePreviewImageSizeInPx(ImageView imageView) {
@@ -730,6 +934,21 @@ public class Treeview extends LinearLayout {
             @Override
             public void onClick(View v) {
 
+            }
+        }
+
+        private class TextViewDescriptionOnLongClickListener implements OnLongClickListener {
+            @Override
+            public boolean onLongClick(View v) {
+                // Toggle selection
+                TextView myTextView = (TextView) v.findViewById(R.id.treenode_description);
+                ListViewListItem objListItem = (ListViewListItem) myTextView.getTag();
+                TreeviewNode objNewSelectedTreeNode = objListItem.getTreeviewNode();
+                objNewSelectedTreeNode.toggleSelection();
+
+                // Refresh view
+                getTreeview().invalidate();
+                return true;
             }
         }
     }

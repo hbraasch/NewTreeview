@@ -126,6 +126,8 @@ public class IndentableTextView extends TextView {
         paintPlainBlack.setTextSize(TreeviewUtils.spToPx(getContext(), intTextSizeInSp));
 
         fltRadiusInPx = (float) TreeviewUtils.dpToPx(getContext(), intIndentRadiusInDp);
+
+        invalidate();
     }
 
     @Override
@@ -161,22 +163,21 @@ public class IndentableTextView extends TextView {
         int intTextYpos = (int) (((drawingRectHeightAjusted.bottom - drawingRectHeightAjusted.top) / 2) - ((paintPlainBlack
                 .descent() + paintPlainBlack.ascent()) / 2));
 
-        if (listViewListItem.isSelected()) {
+        if (listViewListItem.getTreeviewNode().isSelected()) {
             intColorStart = this.intSelectColor;
-            intColorEnd = R.color.treeview_select_background_fill_color;
             setBackgroundColor(getResources().getColor(R.color.treeview_select_background_fill_color));
         } else {
-            intColorStart = getResources().getColor(R.color.treeview_unselect_fill_color);
-            intColorEnd = R.color.white_background;
-            setBackgroundColor(getResources().getColor(R.color.white_background));
+            intColorStart = getResources().getColor(R.color.treeview_unselect_color);
+            setBackgroundColor(getResources().getColor(R.color.treeview_unselect_background_fill_color));
         }
-        paintIndentBackground.setColor(intColorStart);
         myLinearGradient = new LinearGradient(indentRect.left, indentRect.top, indentRect.right,
-                indentRect.bottom, intColorEnd, intColorStart,Shader.TileMode.CLAMP);
+                indentRect.bottom, intColorStart, intColorEnd, Shader.TileMode.CLAMP);
         paintIndentBackground.setShader(myLinearGradient);
 
         DrawCustomRect(canvas, indentRect, paintIndentBackground);
         canvas.drawText(FormatString(listViewListItem.getTreeviewNode().getDescription(), paintPlainBlack), inTextHorizontalOffsetInPx, intTextYpos, paintPlainBlack);
+
+        super.onDraw(canvas);
 
     }
 
