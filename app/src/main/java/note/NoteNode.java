@@ -21,4 +21,9 @@ public class NoteNode extends NoteNodeBase<NoteNode> {
     public NoteNode getParent() {
         return parent;
     }
+
+    public void addChildNode(NoteNode childNode) {
+        children.add(childNode);
+        childNode.setParent(this);
+    }
 }

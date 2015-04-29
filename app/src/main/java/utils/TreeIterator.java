@@ -1,6 +1,8 @@
-package treeview;
+package utils;
 
 import java.util.ArrayList;
+
+import treeview.NodeBase;
 
 /**
  * Created by HeinrichWork on 4/04/2015.

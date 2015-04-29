@@ -15,6 +15,8 @@ import android.widget.TextView;
 
 import com.treeapps.newtreeview.R;
 
+import utils.TreeUtils;
+
 /**
  * Created by HeinrichWork on 23/04/2015.
  */
@@ -48,12 +50,12 @@ public class IndentableTextView extends TextView {
     int intThumbnailWidthInPx;
     int intTabWidthInPx;
     int intIndentLevelAmountMax;
-    int inTextHorizontalOffsetInPx = TreeviewUtils.dpToPx(getContext(),TEXT_HORIZONTAL_OFFSET_IN_DP);
+    int inTextHorizontalOffsetInPx = TreeUtils.dpToPx(getContext(), TEXT_HORIZONTAL_OFFSET_IN_DP);
 
     private void init() {
 
-        fltLineWidthInDp = TreeviewUtils.dpToPx(getContext(), getResources().getInteger(R.integer.treeview_select_line_width_in_dp));
-        intRadiusDefaultInPx = TreeviewUtils.dpToPx(getContext(), getResources().getInteger(R.integer.treeview_indent_radius_in_dp));
+        fltLineWidthInDp = TreeUtils.dpToPx(getContext(), getResources().getInteger(R.integer.treeview_select_line_width_in_dp));
+        intRadiusDefaultInPx = TreeUtils.dpToPx(getContext(), getResources().getInteger(R.integer.treeview_indent_radius_in_dp));
 
         paintPlainBlack = new Paint();
         paintPlainBlack.setDither(true);
@@ -123,9 +125,9 @@ public class IndentableTextView extends TextView {
 
         this.intSelectColor = intSelectColor;
 
-        paintPlainBlack.setTextSize(TreeviewUtils.spToPx(getContext(), intTextSizeInSp));
+        paintPlainBlack.setTextSize(TreeUtils.spToPx(getContext(), intTextSizeInSp));
 
-        fltRadiusInPx = (float) TreeviewUtils.dpToPx(getContext(), intIndentRadiusInDp);
+        fltRadiusInPx = (float) TreeUtils.dpToPx(getContext(), intIndentRadiusInDp);
 
         invalidate();
     }

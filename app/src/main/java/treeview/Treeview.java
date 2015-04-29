@@ -30,6 +30,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import utils.TreeIterator;
+import utils.TreeUtils;
+
 /**
  * Created by HeinrichWork on 23/04/2015.
  */
@@ -68,8 +71,8 @@ public class Treeview extends LinearLayout {
 
     private ArrayList<ListViewListItem> listViewListItems;
     private TreeviewArrayAdapter arrayAdapter;
-    private TreeAdapter treeAdapter;
-    private ListView listView;
+    private TreeviewAdapter treeAdapter;
+    public ListView listView;
     private int intTreeNodeLayoutId;
     private boolean boolIsMultiSelectable;
     private boolean boolIsCheckboxLongClickEnabled;
@@ -92,30 +95,28 @@ public class Treeview extends LinearLayout {
 
     public Treeview(Context context) {
         super(context);
-        this.listView = new ListView(getContext());
+        this.listView = new ListView(context);
         addView(this.listView);
     }
-
-
 
     public Treeview(Context context, AttributeSet attrs) {
         super(context, attrs);
         getStyledAttributes(context,attrs);
-        this.listView = new ListView(getContext());
+        this.listView = new ListView(context);
         addView(this.listView);
     }
 
     public Treeview(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         getStyledAttributes(context,attrs);
-        this.listView = new ListView(getContext());
+        this.listView = new ListView(context);
         addView(this.listView);
     }
 
     public Treeview(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr);
         getStyledAttributes(context,attrs);
-        this.listView = new ListView(getContext());
+        this.listView = new ListView(context);
         addView(this.listView);
     }
 
@@ -151,10 +152,12 @@ public class Treeview extends LinearLayout {
         boolIsCheckList = false;
         boolIsCheckedItemsMadeHidden = false;
 
+
+
     }
 
 
-    public void setAdapter(TreeAdapter treeAdapter) {
+    public void setAdapter(TreeviewAdapter treeAdapter) {
 
         // Adapter
         this.treeAdapter = treeAdapter;
@@ -163,7 +166,7 @@ public class Treeview extends LinearLayout {
         invalidate();
     }
 
-    public TreeAdapter getAdapter() {
+    public TreeviewAdapter getAdapter() {
         return this.treeAdapter;
     }
 
@@ -582,9 +585,10 @@ public class Treeview extends LinearLayout {
         return boolItteration;
     }
 
-
-
-    // Events
+    public void register(Context context) {
+        this.listView = new ListView(context);
+        addView(this.listView);
+    }
 
 
     /**
@@ -689,8 +693,8 @@ public class Treeview extends LinearLayout {
      */
     class TreeviewArrayAdapter extends ArrayAdapter<ListViewListItem> {
 
-        private final int DP_2_IN_PX = TreeviewUtils.dpToPx(getContext(),2);
-        private final int DP_5_IN_PX = TreeviewUtils.dpToPx(getContext(),5);
+        private final int DP_2_IN_PX = TreeUtils.dpToPx(getContext(), 2);
+        private final int DP_5_IN_PX = TreeUtils.dpToPx(getContext(), 5);
 
         private int intResourceId;
         private  List<ListViewListItem> listViewListItems;
@@ -840,7 +844,7 @@ public class Treeview extends LinearLayout {
 
 
             Rect rectPreviewImageSizeInPx = determinePreviewImageSizeInPx(mediaPreviewImageView);
-            fltMaxClickDistance = TreeviewUtils.pxToDp(getContext(),rectPreviewImageSizeInPx.height()/10);
+            fltMaxClickDistance = TreeUtils.pxToDp(getContext(), rectPreviewImageSizeInPx.height() / 10);
 
             // Setup description (must be last because its custom and need sizes from already defined components
             IndentableTextView textViewDescription = (IndentableTextView) relativeView.findViewById(R.id.treenode_description);

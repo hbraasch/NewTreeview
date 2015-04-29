@@ -25,6 +25,25 @@ public abstract class NoteNodeBase<T> implements NodeBase<T> {
         this.strUuid = strUuid;
     }
 
+    public ArrayList<T> getChildNodes() {
+        return children;
+    }
+
+    @Override
+    public T getParent() {
+        return parent;
+    }
+
+    @Override
+    public void setParent(T parentNode) {
+        parent = parentNode;
+    }
+
+
+    public void setChildNodes(ArrayList<T> childnodes) {
+        children = childnodes;
+    }
+
     public String getDescription() {
         return strDescription;
     }

@@ -3,16 +3,17 @@ package treeview;
 import java.util.ArrayList;
 
 import note.NoteNodeBase;
+import utils.TreeIterator;
 
 /**
  * Created by HeinrichWork on 25/04/2015.
  */
-public abstract class TreeAdapter<T extends NoteNodeBase<T>> {
+public abstract class TreeviewAdapter<T extends NoteNodeBase<T>> {
 
     Treeview treeview;
     ArrayList<T> sourceChildNodes;
 
-    protected TreeAdapter(ArrayList<T> sourceChildNodes) {
+    protected TreeviewAdapter(ArrayList<T> sourceChildNodes) {
         this.sourceChildNodes = sourceChildNodes;
     }
 
@@ -63,5 +64,13 @@ public abstract class TreeAdapter<T extends NoteNodeBase<T>> {
 
     public void setTreeview(Treeview treeview) {
         this.treeview = treeview;
+    }
+
+    public ArrayList<T> getSourceChildNodes() {
+        return sourceChildNodes;
+    }
+
+    public void setSourceChildNodes(ArrayList<T> sourceChildNodes) {
+        this.sourceChildNodes = sourceChildNodes;
     }
 }
