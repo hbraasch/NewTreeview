@@ -71,6 +71,7 @@ public class TreeIterator<T extends NodeBase<T>> {
         T parent = startNode.getParent();
         while (parent != null) {
             onTouchAllParentNodesListener.onParentNode(parent);
+            parent = parent.getParent();
         }
         onTouchAllParentNodesListener.onParentNode(null);
     }

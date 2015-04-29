@@ -50,6 +50,18 @@ public class Treeview extends LinearLayout {
         OLD, NEW, NEW_AND_PARENT_OF_NEW, NEW_AND_ROOT_PARENT_OF_NEW, PARENT_OF_NEW, ROOT_PARENT_OF_NEW
     }
 
+    public interface OnSelectionChangedListener {
+        public void onChange(boolean boolIsSelected, TreeviewNode treeviewNode);
+    }
+
+    public interface OnCheckChangedListener {
+        public void onChange(boolean boolIsChecked, TreeviewNode treeviewNode);
+    }
+
+    public interface OnHideCheckChangedListener {
+        public void onChange(boolean boolIsHidden, TreeviewNode treeviewNode);
+    }
+
 
     private Map<Integer,Drawable> iconImages = new HashMap<>();
     private ArrayList<TreeviewNode> childNodes = new ArrayList<TreeviewNode>();
@@ -61,11 +73,10 @@ public class Treeview extends LinearLayout {
     private int intTreeNodeLayoutId;
     private boolean boolIsMultiSelectable;
     private boolean boolIsCheckboxLongClickEnabled;
-    private ArrayList<TreeviewNode> selectedTreeviewNodes;
     private int intTextSizeInSp;
 
     private boolean boolHiddenSelectionIsActive;
-    private boolean boolIsHiddenActive;
+    private boolean boolIsHiddenModeEnabled;
 
 
     private boolean boolIsCheckList;
@@ -75,7 +86,9 @@ public class Treeview extends LinearLayout {
     protected int intSelectColor;
     protected int intIndentRadiusInDp;
 
-
+    private OnSelectionChangedListener onSelectionChangedListener;
+    private OnCheckChangedListener onCheckChangedListener;
+    private OnHideCheckChangedListener onHideCheckChangedListener;
 
     public Treeview(Context context) {
         super(context);
@@ -133,7 +146,7 @@ public class Treeview extends LinearLayout {
         listView.setBackgroundColor(getResources().getColor(R.color.white_background));
 
         boolHiddenSelectionIsActive = false;
-        boolIsHiddenActive = false;
+        boolIsHiddenModeEnabled = false;
 
         boolIsCheckList = false;
         boolIsCheckedItemsMadeHidden = false;
@@ -148,6 +161,10 @@ public class Treeview extends LinearLayout {
         treeAdapter.setTreeview(this);
         childNodes = treeAdapter.adapt();
         invalidate();
+    }
+
+    public TreeAdapter getAdapter() {
+        return this.treeAdapter;
     }
 
 
@@ -185,19 +202,19 @@ public class Treeview extends LinearLayout {
         this.boolHiddenSelectionIsActive = boolHiddenSelectionIsActive;
     }
 
-    public boolean isHiddenActive() {
-        return boolIsHiddenActive;
+    public boolean isHiddenModeEnabled() {
+        return boolIsHiddenModeEnabled;
     }
 
-    public void setHiddenActive(boolean boolIsHiddenActive) {
-        this.boolIsHiddenActive = boolIsHiddenActive;
+    public void setHiddenModeEnabled(boolean boolIsHiddenActive) {
+        this.boolIsHiddenModeEnabled = boolIsHiddenActive;
     }
 
     public boolean isCheckList() {
         return boolIsCheckList;
     }
 
-    public void setIsCheckList(boolean boolIsCheckList) {
+    public void setCheckList(boolean boolIsCheckList) {
         this.boolIsCheckList = boolIsCheckList;
     }
 
@@ -205,7 +222,7 @@ public class Treeview extends LinearLayout {
         return boolIsCheckedItemsMadeHidden;
     }
 
-    public void setIsCheckedItemsMadeHidden(boolean boolIsCheckedItemsMadeHidden) {
+    public void setCheckedItemsMadeHidden(boolean boolIsCheckedItemsMadeHidden) {
         this.boolIsCheckedItemsMadeHidden = boolIsCheckedItemsMadeHidden;
     }
 
@@ -213,8 +230,24 @@ public class Treeview extends LinearLayout {
         return boolIsCheckboxLongClickEnabled;
     }
 
-    public void setIsCheckboxLongClickEnabled(boolean boolIsCheckboxLongClickEnabled) {
+    public void setCheckboxLongClickEnabled(boolean boolIsCheckboxLongClickEnabled) {
         this.boolIsCheckboxLongClickEnabled = boolIsCheckboxLongClickEnabled;
+    }
+
+    public OnCheckChangedListener getOnCheckChangedListener() {
+        return onCheckChangedListener;
+    }
+
+    public void setOnCheckChangedListener(OnCheckChangedListener onCheckChangedListener) {
+        this.onCheckChangedListener = onCheckChangedListener;
+    }
+
+    public OnHideCheckChangedListener getOnHideCheckChangedListener() {
+        return onHideCheckChangedListener;
+    }
+
+    public void setOnHideCheckChangedListener(OnHideCheckChangedListener onHideCheckChangedListener) {
+        this.onHideCheckChangedListener = onHideCheckChangedListener;
     }
 
     // Methods
@@ -222,8 +255,6 @@ public class Treeview extends LinearLayout {
     public Treeview getTreeview() {
         return this;
     }
-
-
 
     public void addNode(TreeviewNode treeviewNode) {
         treeviewNode.setParent(null);
@@ -245,6 +276,7 @@ public class Treeview extends LinearLayout {
     }
 
     public TreeviewNode getSelectedFirst() {
+        ArrayList<TreeviewNode> selectedTreeviewNodes = getSelected();
         if (selectedTreeviewNodes != null) {
             if (selectedTreeviewNodes.size() != 0) {
                     return selectedTreeviewNodes.get(0);
@@ -254,6 +286,17 @@ public class Treeview extends LinearLayout {
     }
 
     public ArrayList<TreeviewNode> getSelected() {
+        final ArrayList<TreeviewNode> selectedTreeviewNodes = new ArrayList<>();
+        TreeIterator<TreeviewNode> iterator = new TreeIterator<>(this.getChildNodes());
+        iterator.execute(new TreeIterator.OnTouchAllNodesListener<TreeviewNode>() {
+            @Override
+            public boolean onNode(ArrayList parentArrayList, TreeviewNode treenode, int intLevel) {
+                if (treenode.isSelected()) {
+                    selectedTreeviewNodes.add(treenode);
+                }
+                return false;
+            }
+        });
         return selectedTreeviewNodes;
     }
 
@@ -279,7 +322,7 @@ public class Treeview extends LinearLayout {
                     // Busy selecting items to hide, all must display
                     boolDisplayItem = true;
                 } else {
-                    if (isHiddenActive() == false) {
+                    if (isHiddenModeEnabled() == false) {
                         // Hidden is not activated, so display all
                         boolDisplayItem = true;
                     } else {
@@ -322,7 +365,7 @@ public class Treeview extends LinearLayout {
 
 
 
-                // Fill in the _boolFolderHasHiddenItems property. If any child with hidden items, return true
+                // Fill in the hasHiddenItems property. If any child with hidden items, return true
                 if ((treeviewNode.getExpansionState() == EnumTreenodeExpansionState.COLLAPSED)
                         || (treeviewNode.getExpansionState() == EnumTreenodeExpansionState.EXPANDED)) {
                     listItem.setHasHiddenItems(treeviewNode.isAnyChildrenHidden());
@@ -416,6 +459,16 @@ public class Treeview extends LinearLayout {
         return listViewListItemsNew;
     }
 
+    // Listeners
+
+    public void setOnSelectionChangedListener(OnSelectionChangedListener onSelectionChangedListener) {
+        this.onSelectionChangedListener = onSelectionChangedListener;
+    }
+
+    public OnSelectionChangedListener getOnSelectionChangedListener() {
+        return onSelectionChangedListener;
+    }
+
     /**
      * Used to generate the treenode icon drawable
      * @param listViewListItem
@@ -429,7 +482,19 @@ public class Treeview extends LinearLayout {
         EnumTreenodeExpansionState enumExpansionState = treeviewNode.getExpansionState();
         int intLayerCount = 1;
         boolean boolIsNew = treeviewNode.isNew();
-        boolean boolIsHidden = treeviewNode.isHidden();
+        // Hidden management
+        boolean boolIsHidden = false;
+        if (treeviewNode.isHidden()) {
+            // This item is hidden
+            boolIsHidden = true;
+        } else {
+            // This item is not hidden
+            if (listViewListItem.hasHiddenItems() && treeview.isHiddenModeEnabled()) {
+                // This item is not hidden, but has children underneath that is hidden
+                boolIsHidden = true;
+            }
+        }
+        // End of hidden management
         if (boolIsHidden) intLayerCount +=1;
         if (boolIsNew) intLayerCount +=1;
 
@@ -551,7 +616,6 @@ public class Treeview extends LinearLayout {
         private boolean boolHasHiddenItems;
 
 
-
         // Getters Setters
 
         public TreeviewNode getTreeviewNode() {
@@ -609,6 +673,7 @@ public class Treeview extends LinearLayout {
         public void setHasHiddenItems(boolean boolHasHiddenItems) {
             this.boolHasHiddenItems = boolHasHiddenItems;
         }
+
 
         ListViewListItem(Treeview treeview, TreeviewNode treeviewNode, int intLevel, EnumTreenodeListItemLevelRelation enumAboveRelation, EnumTreenodeListItemLevelRelation enumBelowRelation, EnumTreenodeNewItemType enumTreenodeNewItemType) {
             this.treeview = treeview;
@@ -689,11 +754,14 @@ public class Treeview extends LinearLayout {
             }
             setCheckboxVisibilityBasedOnSettings(checkbox, treeview.isCheckList(), treeview.isHiddenSelectionActive());
             if ( treeview.isHiddenSelectionActive() == false) {
-                // Hide selection is inactive
+                // Hide mode is inactive
                 if (treeview.isCheckList()) {
                     // Checklist activities
+
+                    // Set click events
                     // Set items depending on checklist type note
                     if (treeview.isCheckboxLongClickEnabled() == false) {
+                        // Short click
                         checkbox.setOnClickListener(new OnClickListener() {
                             @Override
                             public void onClick (View view) {
@@ -701,6 +769,7 @@ public class Treeview extends LinearLayout {
                             }
                         });
                     } else {
+                        // Long click
                         checkbox.setOnClickListener(new OnClickListener() {
                             @Override
                             public void onClick (View view) {
@@ -721,6 +790,7 @@ public class Treeview extends LinearLayout {
                         });
                     }
 
+                    // For this node, update checkbox display
                     if (treeviewNode.isChecked()) {
                         checkbox.setChecked(true);
                     } else {
@@ -731,24 +801,26 @@ public class Treeview extends LinearLayout {
                 }
 
             } else {
-                // Hide selection is active
+                // Hide mode is active
+                // Set click event
                 checkbox.setOnClickListener(new OnClickListener() {
 
                     @Override
                     public void onClick(View view) {
                         if (((CheckBox) view).isChecked()) {
-                            treeviewNode.setChildrenHidden(true);
+                            treeviewNode.setSelfAndChildrenHidden(true);
                         } else {
-                            treeviewNode.setChildrenHidden(false);
+                            treeviewNode.setSelfAndChildrenHidden(false);
                         }
                     }
                 });
+
+                // For this node, update checkbox display
                 if (treeviewNode.isHidden()) {
                     checkbox.setChecked(true);
                 } else {
                     checkbox.setChecked(false);
                 }
-
             }
 
 
@@ -785,16 +857,17 @@ public class Treeview extends LinearLayout {
             if (checkBox.isChecked()) {
                 // Checked
                 if (treeviewNode.getExpansionState() != EnumTreenodeExpansionState.EMPTY) {
-                    // Not empty
-                    if (treeviewNode.isAnyChildrenChecked() == false) {
-                        // If checkbox is on a parent, ask user if
-                        // he wants all children checked
+                    // Checkbox is on a parent with children
+                    if (!treeviewNode.isAllChildrenChecked()) {
+                        // All are not checked, ask user if all children needs to be checked
                         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-                        builder.setTitle("All items below will be checked also. Do you want to proceed?");
+                        builder.setTitle("All items below will be checked. Do you want to proceed?");
                         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
+                                // Check itself and all children
+                                treeviewNode.setChecked(true);
                                 treeviewNode.setChildrenChecked(true);
                                 invalidate();
                             }
@@ -803,7 +876,7 @@ public class Treeview extends LinearLayout {
 
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-
+                                // Cancel, reset the check
                                 treeviewNode.setChecked(false);
                                 dialog.cancel();
                                 invalidate();
@@ -811,33 +884,39 @@ public class Treeview extends LinearLayout {
                             }
                         });
                         builder.show();
+                    } else {
+                        // All children are already checked, check only this item
+                        treeviewNode.setChecked(true);
+                        invalidate();
                     }
+                } else {
+                    // Checkbox is on a leaf, no children. Just check itself
+                    treeviewNode.setChecked(true);
+                    invalidate();
                 }
-                // If checkbox is on a child, just carry on checking it
-                treeviewNode.setChecked(true);
-                invalidate();
             } else {
                 // Unchecked
                 if (treeviewNode.getExpansionState() != EnumTreenodeExpansionState.EMPTY) {
-                    // Not empty
-                    if (treeviewNode.getChildNodes().isEmpty() == false) {
-                        // If checkbox is on a parent, ask user if he wants all children unchecked
+                    // Item is a parent with children
+                    if (treeviewNode.isAnyChildrenChecked()) {
+                        // Some children are checked, ask user if all of them needs to be unchecked
                         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
-                        builder.setTitle("All items below will be unchecked also. Do you want to proceed?");
+                        builder.setTitle("All items below will be unchecked. Do you want to proceed?");
                         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-
+                                // Uncheck self and all children
+                                treeviewNode.setChecked(false);
                                 treeviewNode.setChildrenChecked(false);
                                 invalidate();
                             }
                         });
-                        builder.setNeutralButton("Unchecked only", new DialogInterface.OnClickListener() {
+                        builder.setNeutralButton("Uncheck clicked only", new DialogInterface.OnClickListener() {
 
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-
+                                // Uncheck self only
                                 treeviewNode.setChecked(false);
                                 invalidate();
                             }
@@ -846,6 +925,7 @@ public class Treeview extends LinearLayout {
 
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
+                                // Cancel, reset the uncheck
                                 treeviewNode.setChecked(true);
                                 dialog.cancel();
                                 invalidate();
@@ -853,17 +933,19 @@ public class Treeview extends LinearLayout {
                         });
                         builder.show();
                     } else {
+                        // No children are checked, only uncheck this item
                         treeviewNode.setChildrenChecked(false);
                         invalidate();
                     }
+                } else {
+                    // Checkbox is on a leaf, no children. Just uncheck itself
+                    treeviewNode.setChecked(false);
+                    invalidate();
                 }
 
-                // If checkbox is on a child, just carry on un-checking it
-                treeviewNode.setChecked(false);
                 // Uncheck all parents because if any child unchecked, no parent can be set
                 treeviewNode.setParentsChecked(false);
-
-                invalidate();;
+                invalidate();
             }
         }
 

@@ -2,8 +2,26 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools" tools:context=".MainActivity">
     <item android:id="@+id/action_test" android:title="@string/action_test"
-        android:orderInCategory="100" app:showAsAction="always"
+        android:orderInCategory="100" app:showAsAction="never"
         android:onClick="onMenuTestClick"/>
+    <item android:id="@+id/action_toggle_checklist" android:title="Toggle checklist"
+        android:orderInCategory="100" app:showAsAction="never"
+        android:onClick="onMenuToggleChecklistClick"/>
+    <item android:id="@+id/action_toggle_hidden_mode" android:title="Toggle hide mode"
+        android:orderInCategory="100" app:showAsAction="never"
+        android:onClick="onMenuToggleHideModeClick"/>
+    <item android:id="@+id/action_toggle_hide_selection_active" android:title="Toggle hide selection active"
+        android:orderInCategory="100" app:showAsAction="never"
+        android:onClick="onMenuToggleHideHiddenClick"/>
+    <item android:id="@+id/action_add_same_level" android:title="Add same level"
+        android:orderInCategory="100" app:showAsAction="never"
+        android:onClick="onMenuAddSameLevelClick"/>
+    <item android:id="@+id/action_add_next_level" android:title="Add next level"
+        android:orderInCategory="100" app:showAsAction="never"
+        android:onClick="onMenuAddNextLevelClick"/>
+    <item android:id="@+id/action_delete" android:title="Delete"
+        android:orderInCategory="100" app:showAsAction="never"
+        android:onClick="onMenuDeleteClick"/>
     <item android:id="@+id/action_settings" android:title="@string/action_settings"
         android:orderInCategory="100" app:showAsAction="never" />
 </menu>
