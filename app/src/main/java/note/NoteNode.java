@@ -1,11 +1,11 @@
 package note;
 
-import java.util.ArrayList;
+import android.graphics.drawable.Drawable;
 
 /**
  * Created by HeinrichWork on 26/04/2015.
  */
-public class NoteNode extends NoteNodeBase<NoteNode> {
+public class NoteNode extends Node<NoteNode> {
 
     public NoteNode(String strDescription)
     {
@@ -17,4 +17,5 @@ public class NoteNode extends NoteNodeBase<NoteNode> {
         childNode.setParent(this);
         childNode.setNew(true);
     }
+
 }

@@ -1,6 +1,7 @@
 <menu xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
-    xmlns:tools="http://schemas.android.com/tools" tools:context=".MainActivity">
+    xmlns:tools="http://schemas.android.com/tools"
+    tools:context="com.treeapps.newtreeview.ActivityTabbed">
     <item android:id="@+id/action_test" android:title="@string/action_test"
         android:orderInCategory="100" app:showAsAction="never"
         android:onClick="onMenuTestClick"/>
@@ -20,8 +21,8 @@
         android:orderInCategory="100" app:showAsAction="never"
         android:onClick="onMenuAddNextLevelClick"/>
     <item android:id="@+id/action_delete" android:title="Delete"
-    android:orderInCategory="100" app:showAsAction="never"
-    android:onClick="onMenuDeleteClick"/>
+        android:orderInCategory="100" app:showAsAction="never"
+        android:onClick="onMenuDeleteClick"/>
     <item android:id="@+id/action_moveUp" android:title="Move up"
         android:orderInCategory="100" app:showAsAction="never"
         android:onClick="onMenuMoveUpClick"/>
@@ -39,4 +40,7 @@
     <item android:id="@+id/action_toggle_descript_long_click_enabled" android:title="Toggle selection long-click enabled"
         android:orderInCategory="100" app:showAsAction="never"
         android:onClick="onMenuToggleEnableSelectionLongClick"/>
+    <item android:id="@+id/action_add_image" android:title="Add image"
+        android:orderInCategory="100" app:showAsAction="never"
+        android:onClick="onMenuAddImageClick"/>
 </menu>

@@ -4,6 +4,12 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
     <string name="action_test">Test</string>
+    <string name="title_activity_activity_tabbed">ActivityTabbed</string>
 
+
+    <string name="title_fragment_own">Own</string>
+    <string name="title_fragment_share">Shared</string>
+    <string name="title_fragment_archive">Archived</string>
+    <string name="bitmap_generation_error">Error when creating bitmap</string>
 
 </resources>

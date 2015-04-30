@@ -30,8 +30,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import utils.TreeIterator;
-import utils.TreeUtils;
+import utils.Utils;
 
 /**
  * Created by HeinrichWork on 23/04/2015.
@@ -733,8 +732,8 @@ public class Treeview extends RelativeLayout {
      */
     class TreeviewArrayAdapter extends ArrayAdapter<ListViewListItem> {
 
-        private final int DP_2_IN_PX = TreeUtils.dpToPx(getContext(), 2);
-        private final int DP_5_IN_PX = TreeUtils.dpToPx(getContext(), 5);
+        private final int DP_2_IN_PX = Utils.dpToPx(getContext(), 2);
+        private final int DP_5_IN_PX = Utils.dpToPx(getContext(), 5);
 
         private int intResourceId;
         private  List<ListViewListItem> listViewListItems;
@@ -884,7 +883,7 @@ public class Treeview extends RelativeLayout {
 
 
             Rect rectPreviewImageSizeInPx = determinePreviewImageSizeInPx(mediaPreviewImageView);
-            fltMaxClickDistance = TreeUtils.pxToDp(getContext(), rectPreviewImageSizeInPx.height() / 10);
+            fltMaxClickDistance = Utils.pxToDp(getContext(), rectPreviewImageSizeInPx.height() / 10);
 
             // Setup description view (must be last because it is custom and need above already defined component sizes
             IndentableTextView textViewDescription = (IndentableTextView) relativeView.findViewById(R.id.treenode_description);

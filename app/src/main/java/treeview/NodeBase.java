@@ -7,7 +7,7 @@ import java.util.ArrayList;
  */
 
 public interface NodeBase<T> {
+     
     public ArrayList<T> getChildNodes();
     public  T getParent();
-    public  void setParent(T parentNode);
 }

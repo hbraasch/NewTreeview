@@ -2,13 +2,12 @@ package treeview;
 
 import java.util.ArrayList;
 
-import note.NoteNodeBase;
-import utils.TreeIterator;
+import note.Node;
 
 /**
  * Created by HeinrichWork on 25/04/2015.
  */
-public abstract class TreeviewAdapter<T extends NoteNodeBase<T>> {
+public abstract class TreeviewAdapter<T extends Node<T>> {
 
     Treeview treeview;
     ArrayList<T> sourceChildNodes;

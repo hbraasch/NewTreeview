@@ -2,11 +2,7 @@ package treeview;
 
 import android.graphics.drawable.Drawable;
 
-import com.treeapps.newtreeview.MainActivity;
-
 import java.util.ArrayList;
-
-import utils.TreeIterator;
 
 /**
  * Created by HeinrichWork on 23/04/2015.
@@ -41,19 +37,20 @@ public class TreeviewNode implements NodeBase<TreeviewNode> {
     private transient Treeview treeview;
     private transient Object tag;
 
-    public TreeviewNode(Treeview treeview, String strDescription, boolean boolIsSelected, boolean boolIsChecked, boolean boolIsHidden, boolean boolIsNew, Object tag) {
+    public TreeviewNode(Treeview treeview, String strDescription, Integer intIconId, boolean boolIsSelected, boolean boolIsChecked, boolean boolIsHidden, boolean boolIsNew, boolean boolIsDeleted, Drawable drawableMediaPreviewImage, Object tag) {
         this.treeview = treeview;
-        this.intIconId = MainActivity.EnumIconImageId.EMPTY.getValue();
+        this.intIconId = intIconId;
         this.boolIsNew = false;
         this.boolIsSelected = boolIsSelected;
         this.boolIsHidden = boolIsHidden;
         this.boolIsNew = boolIsNew;
         this.boolIsChecked = boolIsChecked;
         this.boolIsDirty = false;
-        this.boolIsDeleted = false;
+        this.boolIsDeleted = boolIsDeleted;
         this.strDescription = strDescription;
         this.drawableMediaPreviewImage = null;
         this.enumTreenodeExpansionState = Treeview.EnumTreenodeExpansionState.EMPTY;
+        this.drawableMediaPreviewImage = drawableMediaPreviewImage;
         this.tag = tag;
     }
 

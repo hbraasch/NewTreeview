@@ -1,5 +1,7 @@
 package note;
 
+import android.graphics.drawable.Drawable;
+
 import java.util.ArrayList;
 
 import treeview.NodeBase;
@@ -7,7 +9,7 @@ import treeview.NodeBase;
 /**
  * Created by HeinrichWork on 26/04/2015.
  */
-public abstract class NoteNodeBase<T> implements NodeBase<T> {
+public abstract class Node<T> implements NodeBase<T> {
     private String strUuid;
     private String strDescription;
     private boolean boolIsSelected;
@@ -15,6 +17,7 @@ public abstract class NoteNodeBase<T> implements NodeBase<T> {
     private boolean boolIsHidden;
     private boolean boolIsNew;
     private boolean boolIsDeleted;
+    private Drawable mediaPreviewImage;
 
     public T parent;
     public ArrayList<T> childNoteNodes = new ArrayList<T>();
@@ -89,5 +92,13 @@ public abstract class NoteNodeBase<T> implements NodeBase<T> {
 
     public boolean isDeleted() {
         return boolIsDeleted;
+    }
+
+    public Drawable getMediaPreviewImage() {
+        return mediaPreviewImage;
+    }
+
+    public void setMediaPreviewImage(Drawable mediaPreviewImage) {
+        this.mediaPreviewImage = mediaPreviewImage;
     }
 }
