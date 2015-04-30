@@ -33,7 +33,7 @@ public class TreeviewNode implements NodeBase<TreeviewNode> {
 
 
 
-    // Items parent and children
+    // Items parent and childNoteNodes
     private TreeviewNode parent;
     private ArrayList<TreeviewNode> childTreeviewNodes = new ArrayList<TreeviewNode>();
 
@@ -41,12 +41,13 @@ public class TreeviewNode implements NodeBase<TreeviewNode> {
     private transient Treeview treeview;
     private transient Object tag;
 
-    public TreeviewNode(Treeview treeview, String strDescription, boolean boolIsSelected, boolean boolIsChecked, boolean boolIsHidden, Object tag) {
+    public TreeviewNode(Treeview treeview, String strDescription, boolean boolIsSelected, boolean boolIsChecked, boolean boolIsHidden, boolean boolIsNew, Object tag) {
         this.treeview = treeview;
         this.intIconId = MainActivity.EnumIconImageId.EMPTY.getValue();
         this.boolIsNew = false;
         this.boolIsSelected = boolIsSelected;
         this.boolIsHidden = boolIsHidden;
+        this.boolIsNew = boolIsNew;
         this.boolIsChecked = boolIsChecked;
         this.boolIsDirty = false;
         this.boolIsDeleted = false;
@@ -56,12 +57,13 @@ public class TreeviewNode implements NodeBase<TreeviewNode> {
         this.tag = tag;
     }
 
-    public TreeviewNode(Treeview treeview, Integer intIconId, boolean boolIsNew, boolean boolIsSelected, boolean boolIsChecked, boolean boolIsHidden, String strDescription, Drawable drawableMediaPreviewImage, boolean boolIsDirty, boolean boolIsDeleted, Treeview.EnumTreenodeExpansionState enumTreenodeExpansionState) {
+    public TreeviewNode(Treeview treeview, String strDescription, Integer intIconId, boolean boolIsNew, boolean boolIsSelected, boolean boolIsChecked, boolean boolIsHidden, Drawable drawableMediaPreviewImage, boolean boolIsDirty, boolean boolIsDeleted, Treeview.EnumTreenodeExpansionState enumTreenodeExpansionState) {
         this.treeview = treeview;
         this.intIconId = intIconId;
         this.boolIsNew = boolIsNew;
         this.boolIsSelected = boolIsSelected;
         this.boolIsHidden = boolIsHidden;
+        this.boolIsNew = boolIsNew;
         this.boolIsChecked = boolIsChecked;
         this.boolIsDirty = boolIsDirty;
         this.boolIsDeleted = boolIsDeleted;
@@ -231,9 +233,9 @@ public class TreeviewNode implements NodeBase<TreeviewNode> {
             public boolean onNode(ArrayList<TreeviewNode> parentArrayList, TreeviewNode treeviewNode, int intLevel) {
                 if (treeviewNode.isNew()) {
                     boolIteratorHelper = true;
-                    return false;
+                    return true; // Exit immediately
                 }
-                return true;
+                return false;
             }
         });
         return boolIteratorHelper;
@@ -248,7 +250,7 @@ public class TreeviewNode implements NodeBase<TreeviewNode> {
         // Set itself
         this.setHidden(boolIsHidden);
 
-        // Set children
+        // Set childNoteNodes
         boolIteratorHelper = false;
         TreeIterator<TreeviewNode> treeIterator = new TreeIterator<>(this.getChildNodes());
         treeIterator.execute(new TreeIterator.OnTouchAllNodesListener<TreeviewNode>() {
@@ -263,7 +265,7 @@ public class TreeviewNode implements NodeBase<TreeviewNode> {
     public void setChildrenChecked(final boolean boolIsChecked)  {
         // Set itself
         this.setChecked(boolIsChecked);
-        // Set children
+        // Set childNoteNodes
         boolIteratorHelper = false;
         TreeIterator<TreeviewNode> treeIterator = new TreeIterator<>(this.getChildNodes());
         treeIterator.execute(new TreeIterator.OnTouchAllNodesListener<TreeviewNode>() {

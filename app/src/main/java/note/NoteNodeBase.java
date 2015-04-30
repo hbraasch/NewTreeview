@@ -13,9 +13,11 @@ public abstract class NoteNodeBase<T> implements NodeBase<T> {
     private boolean boolIsSelected;
     private boolean boolIsChecked;
     private boolean boolIsHidden;
+    private boolean boolIsNew;
+    private boolean boolIsDeleted;
 
     public T parent;
-    public ArrayList<T> children = new ArrayList<T>();
+    public ArrayList<T> childNoteNodes = new ArrayList<T>();
 
     public String getUuid() {
         return strUuid;
@@ -26,22 +28,19 @@ public abstract class NoteNodeBase<T> implements NodeBase<T> {
     }
 
     public ArrayList<T> getChildNodes() {
-        return children;
+        return childNoteNodes;
     }
 
-    @Override
     public T getParent() {
         return parent;
     }
 
-    @Override
     public void setParent(T parentNode) {
         parent = parentNode;
     }
 
-
     public void setChildNodes(ArrayList<T> childnodes) {
-        children = childnodes;
+        childNoteNodes = childnodes;
     }
 
     public String getDescription() {
@@ -74,5 +73,21 @@ public abstract class NoteNodeBase<T> implements NodeBase<T> {
 
     public void setHidden(boolean boolIsHidden) {
         this.boolIsHidden = boolIsHidden;
+    }
+
+    public boolean isNew() {
+        return boolIsNew;
+    }
+
+    public void setNew(boolean boolIsNew) {
+        this.boolIsNew = boolIsNew;
+    }
+
+    public void setDelete(boolean boolIsDeleted) {
+        this.boolIsDeleted = boolIsDeleted;
+    }
+
+    public boolean isDeleted() {
+        return boolIsDeleted;
     }
 }

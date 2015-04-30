@@ -36,7 +36,7 @@ import utils.TreeUtils;
 /**
  * Created by HeinrichWork on 23/04/2015.
  */
-public class Treeview extends LinearLayout {
+public class Treeview extends RelativeLayout {
 
 
 
@@ -65,62 +65,63 @@ public class Treeview extends LinearLayout {
         public void onChange(boolean boolIsHidden, TreeviewNode treeviewNode);
     }
 
-
+    // Tree management data
     private Map<Integer,Drawable> iconImages = new HashMap<>();
     private ArrayList<TreeviewNode> childNodes = new ArrayList<TreeviewNode>();
-
-    private ArrayList<ListViewListItem> listViewListItems;
     private TreeviewArrayAdapter arrayAdapter;
+
+    // List management data
+    private ArrayList<ListViewListItem> listViewListItems;
     private TreeviewAdapter treeAdapter;
     public ListView listView;
-    private int intTreeNodeLayoutId;
+
+    // Newness data
+    public NewItemsIndicatorView newItemsIndicatorView;
+
+    // Behaviour and appearance parameters
     private boolean boolIsMultiSelectable;
     private boolean boolIsCheckboxLongClickEnabled;
-    private int intTextSizeInSp;
-
+    private boolean boolIsDescriptionLongClickEnabled;
     private boolean boolHiddenSelectionIsActive;
     private boolean boolIsHiddenModeEnabled;
-
-
     private boolean boolIsCheckList;
     private boolean boolIsCheckedItemsMadeHidden;
 
+    private int intTextSizeInSp;
     protected int intMaxIndentLevel;
     protected int intSelectColor;
     protected int intIndentRadiusInDp;
 
+    // Listeners
     private OnSelectionChangedListener onSelectionChangedListener;
     private OnCheckChangedListener onCheckChangedListener;
     private OnHideCheckChangedListener onHideCheckChangedListener;
 
     public Treeview(Context context) {
         super(context);
-        this.listView = new ListView(context);
-        addView(this.listView);
+        addViewsToTreeview(context);
+
     }
+
+
 
     public Treeview(Context context, AttributeSet attrs) {
         super(context, attrs);
         getStyledAttributes(context,attrs);
-        this.listView = new ListView(context);
-        addView(this.listView);
+        addViewsToTreeview(context);
     }
 
     public Treeview(Context context, AttributeSet attrs, int defStyleAttr) {
         super(context, attrs, defStyleAttr);
         getStyledAttributes(context,attrs);
-        this.listView = new ListView(context);
-        addView(this.listView);
+        addViewsToTreeview(context);
     }
 
     public Treeview(Context context, AttributeSet attrs, int defStyleAttr, int defStyleRes) {
         super(context, attrs, defStyleAttr);
         getStyledAttributes(context,attrs);
-        this.listView = new ListView(context);
-        addView(this.listView);
+        addViewsToTreeview(context);
     }
-
-
 
     public void getStyledAttributes(Context context, AttributeSet attrs) {
         TypedArray a = context.getTheme().obtainStyledAttributes(attrs,R.styleable.Treeview, 0, 0);
@@ -131,10 +132,20 @@ public class Treeview extends LinearLayout {
         }
     }
 
-    public void setParameters(int intTreeNodeLayoutId, Map<Integer,Drawable> iconImages, int intMaxIndentLevel, int intSelectColor, int intTextSizeInSp, int intIndentRadiusInDp) {
+    private void addViewsToTreeview(Context context) {
+        LayoutParams relLayoutParam = new LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT);
+        relLayoutParam.alignWithParent = true;
+
+        this.listView = new ListView(context);
+        addView(this.listView,relLayoutParam );
+
+        this.newItemsIndicatorView = new NewItemsIndicatorView(context);
+        addView(this.newItemsIndicatorView,relLayoutParam );
+    }
+
+    public void setParameters(int intTreenodeItemResourceId, Map<Integer,Drawable> iconImages, int intMaxIndentLevel, int intSelectColor, int intTextSizeInSp, int intIndentRadiusInDp) {
 
         // General initialisation
-        this.intTreeNodeLayoutId = intTreeNodeLayoutId;
         this.iconImages = iconImages;
         this.intMaxIndentLevel = intMaxIndentLevel;
         this.intSelectColor = intSelectColor;
@@ -142,7 +153,7 @@ public class Treeview extends LinearLayout {
         if (this.intTextSizeInSp == 0) this.intTextSizeInSp = intTextSizeInSp;
 
         listViewListItems = new ArrayList<ListViewListItem> ();
-        arrayAdapter = new TreeviewArrayAdapter(getContext(),intTreeNodeLayoutId, listViewListItems);
+        arrayAdapter = new TreeviewArrayAdapter(getContext(),intTreenodeItemResourceId, listViewListItems);
         listView.setAdapter(arrayAdapter);
         listView.setBackgroundColor(getResources().getColor(R.color.white_background));
 
@@ -155,7 +166,6 @@ public class Treeview extends LinearLayout {
 
 
     }
-
 
     public void setAdapter(TreeviewAdapter treeAdapter) {
 
@@ -189,7 +199,7 @@ public class Treeview extends LinearLayout {
         this.childNodes = childNodes;
     }
 
-    public boolean getMultiSelectable() {
+    public boolean isMultiSelectable() {
         return boolIsMultiSelectable;
     }
 
@@ -251,6 +261,14 @@ public class Treeview extends LinearLayout {
 
     public void setOnHideCheckChangedListener(OnHideCheckChangedListener onHideCheckChangedListener) {
         this.onHideCheckChangedListener = onHideCheckChangedListener;
+    }
+
+    public boolean isDescriptionLongClickEnabled() {
+        return boolIsDescriptionLongClickEnabled;
+    }
+
+    public void setDescriptionLongClickEnabled(boolean boolIsDescriptionLongClickEnabled) {
+        this.boolIsDescriptionLongClickEnabled = boolIsDescriptionLongClickEnabled;
     }
 
     // Methods
@@ -373,9 +391,9 @@ public class Treeview extends LinearLayout {
                         || (treeviewNode.getExpansionState() == EnumTreenodeExpansionState.EXPANDED)) {
                     listItem.setHasHiddenItems(treeviewNode.isAnyChildrenHidden());
                 }
-                // Fill in the NewItem property
+                // Fill in the isNew property
                 listItem.setEnumNewItemType(EnumTreenodeNewItemType.OLD);
-                // If topmost item, determine if any children are new
+                // If topmost item, determine if any childNoteNodes are new
                 if (treeviewNode.getParent() == null) {
                     if (treeviewNode.isNew()) {
                         // Topmost item, new
@@ -412,7 +430,7 @@ public class Treeview extends LinearLayout {
 
                 // Collapse Expand handling
                 if (treeviewNode.getExpansionState() == EnumTreenodeExpansionState.COLLAPSED) {
-                    // Do not display children of this leave
+                    // Do not display childNoteNodes of this leave
                     return true;   // Signal to iterator to leave this branch
                 } else {
                     return false; // Signal to iterator to carry on into branch
@@ -462,6 +480,17 @@ public class Treeview extends LinearLayout {
         return listViewListItemsNew;
     }
 
+    private void unselectAllExcluding(TreeviewNode excludedTreeNode)  {
+        ArrayList<TreeviewNode> selectedTreenodes = getSelected();
+        if (selectedTreenodes.size() != 0) {
+            for (TreeviewNode selectedTreenode : selectedTreenodes) {
+                if (!selectedTreenode.equals(excludedTreeNode)) {
+                    selectedTreenode.setSelected(false);
+                }
+            }
+        }
+    }
+
     // Listeners
 
     public void setOnSelectionChangedListener(OnSelectionChangedListener onSelectionChangedListener) {
@@ -484,7 +513,7 @@ public class Treeview extends LinearLayout {
         EnumTreenodeNewItemType enumNewItemType = listViewListItem.getEnumNewItemType();
         EnumTreenodeExpansionState enumExpansionState = treeviewNode.getExpansionState();
         int intLayerCount = 1;
-        boolean boolIsNew = treeviewNode.isNew();
+
         // Hidden management
         boolean boolIsHidden = false;
         if (treeviewNode.isHidden()) {
@@ -493,13 +522,20 @@ public class Treeview extends LinearLayout {
         } else {
             // This item is not hidden
             if (listViewListItem.hasHiddenItems() && treeview.isHiddenModeEnabled()) {
-                // This item is not hidden, but has children underneath that is hidden
+                // This item is not hidden, but has childNoteNodes underneath that is hidden
                 boolIsHidden = true;
             }
         }
-        // End of hidden management
         if (boolIsHidden) intLayerCount +=1;
+        // End of hidden management
+
+        // Newness management
+        boolean boolIsNew = false;
+        if (listViewListItem.getEnumNewItemType() != EnumTreenodeNewItemType.OLD) {
+            boolIsNew = true;
+        }
         if (boolIsNew) intLayerCount +=1;
+        // End of newness management
 
         Drawable[] layers = new Drawable[intLayerCount+1];
         // Main image
@@ -595,10 +631,14 @@ public class Treeview extends LinearLayout {
      * Redraw
      */
     public void invalidate() {
+        // Generate the data for the listView object to display the tree
         listViewListItems = generateListItems();
         arrayAdapter.clear();
         arrayAdapter.addAll(listViewListItems);
         arrayAdapter.notifyDataSetChanged();
+
+        // Generate the data for the newItemsIndicatorView object to indicate new items
+        newItemsIndicatorView.updateListItems(listViewListItems);
     }
 
 
@@ -846,11 +886,17 @@ public class Treeview extends LinearLayout {
             Rect rectPreviewImageSizeInPx = determinePreviewImageSizeInPx(mediaPreviewImageView);
             fltMaxClickDistance = TreeUtils.pxToDp(getContext(), rectPreviewImageSizeInPx.height() / 10);
 
-            // Setup description (must be last because its custom and need sizes from already defined components
+            // Setup description view (must be last because it is custom and need above already defined component sizes
             IndentableTextView textViewDescription = (IndentableTextView) relativeView.findViewById(R.id.treenode_description);
             textViewDescription.setTag(listViewListItem);
             textViewDescription.setProperties(listViewListItem, rectPreviewImageSizeInPx.height(), rectPreviewImageSizeInPx.width(), intMaxIndentLevel, intSelectColor, intTextSizeInSp, intIndentRadiusInDp);
-            textViewDescription.setOnLongClickListener(new TextViewDescriptionOnLongClickListener());
+            if (treeview.isDescriptionLongClickEnabled()) {
+                textViewDescription.setOnClickListener(null);
+                textViewDescription.setOnLongClickListener(new TextViewDescriptionOnLongClickListener());
+            } else {
+                textViewDescription.setOnLongClickListener(null);
+                textViewDescription.setOnClickListener(new TextViewDescriptionOnClickListener());
+            }
 
             // Done
             return relativeView;
@@ -861,16 +907,16 @@ public class Treeview extends LinearLayout {
             if (checkBox.isChecked()) {
                 // Checked
                 if (treeviewNode.getExpansionState() != EnumTreenodeExpansionState.EMPTY) {
-                    // Checkbox is on a parent with children
+                    // Checkbox is on a parent with childNoteNodes
                     if (!treeviewNode.isAllChildrenChecked()) {
-                        // All are not checked, ask user if all children needs to be checked
+                        // All are not checked, ask user if all childNoteNodes needs to be checked
                         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
                         builder.setTitle("All items below will be checked. Do you want to proceed?");
                         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                // Check itself and all children
+                                // Check itself and all childNoteNodes
                                 treeviewNode.setChecked(true);
                                 treeviewNode.setChildrenChecked(true);
                                 invalidate();
@@ -889,28 +935,28 @@ public class Treeview extends LinearLayout {
                         });
                         builder.show();
                     } else {
-                        // All children are already checked, check only this item
+                        // All childNoteNodes are already checked, check only this item
                         treeviewNode.setChecked(true);
                         invalidate();
                     }
                 } else {
-                    // Checkbox is on a leaf, no children. Just check itself
+                    // Checkbox is on a leaf, no childNoteNodes. Just check itself
                     treeviewNode.setChecked(true);
                     invalidate();
                 }
             } else {
                 // Unchecked
                 if (treeviewNode.getExpansionState() != EnumTreenodeExpansionState.EMPTY) {
-                    // Item is a parent with children
+                    // Item is a parent with childNoteNodes
                     if (treeviewNode.isAnyChildrenChecked()) {
-                        // Some children are checked, ask user if all of them needs to be unchecked
+                        // Some childNoteNodes are checked, ask user if all of them needs to be unchecked
                         AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
                         builder.setTitle("All items below will be unchecked. Do you want to proceed?");
                         builder.setPositiveButton("OK", new DialogInterface.OnClickListener() {
 
                             @Override
                             public void onClick(DialogInterface dialog, int which) {
-                                // Uncheck self and all children
+                                // Uncheck self and all childNoteNodes
                                 treeviewNode.setChecked(false);
                                 treeviewNode.setChildrenChecked(false);
                                 invalidate();
@@ -937,12 +983,12 @@ public class Treeview extends LinearLayout {
                         });
                         builder.show();
                     } else {
-                        // No children are checked, only uncheck this item
+                        // No childNoteNodes are checked, only uncheck this item
                         treeviewNode.setChildrenChecked(false);
                         invalidate();
                     }
                 } else {
-                    // Checkbox is on a leaf, no children. Just uncheck itself
+                    // Checkbox is on a leaf, no childNoteNodes. Just uncheck itself
                     treeviewNode.setChecked(false);
                     invalidate();
                 }
@@ -1023,18 +1069,41 @@ public class Treeview extends LinearLayout {
             }
         }
 
+        private class TextViewDescriptionOnClickListener implements OnClickListener {
+            @Override
+            public void onClick(View view) {
+                toggleSelection(view);
+
+                // Refresh view
+                getTreeview().invalidate();
+            }
+        }
+
         private class TextViewDescriptionOnLongClickListener implements OnLongClickListener {
             @Override
-            public boolean onLongClick(View v) {
-                // Toggle selection
-                TextView myTextView = (TextView) v.findViewById(R.id.treenode_description);
-                ListViewListItem objListItem = (ListViewListItem) myTextView.getTag();
-                TreeviewNode objNewSelectedTreeNode = objListItem.getTreeviewNode();
-                objNewSelectedTreeNode.toggleSelection();
+            public boolean onLongClick(View view) {
+                // Toggle
+                toggleSelection(view);
 
                 // Refresh view
                 getTreeview().invalidate();
                 return true;
+            }
+        }
+
+        private void toggleSelection(View view) {
+            TextView myTextView = (TextView) view.findViewById(R.id.treenode_description);
+            ListViewListItem listViewListItem = (ListViewListItem) myTextView.getTag();
+            Treeview treeview = listViewListItem.getTreeview();
+            TreeviewNode treenode = listViewListItem.getTreeviewNode();
+            if (treeview.isMultiSelectable()) {
+                // Toggle
+                treenode.toggleSelection();
+            } else {
+                // Unselect current selections
+                treeview.unselectAllExcluding(treenode);
+                // Toggle selection
+                treenode.toggleSelection();
             }
         }
     }

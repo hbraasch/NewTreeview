@@ -8,7 +8,6 @@ import android.support.v7.app.ActionBarActivity;
 import android.os.Bundle;
 import android.view.Menu;
 import android.view.MenuItem;
-import android.widget.ListView;
 
 import java.util.ArrayList;
 import java.util.Date;
@@ -24,6 +23,8 @@ import utils.TreeUtils;
 
 
 public class MainActivity extends ActionBarActivity {
+
+
 
 
     public static enum EnumIconImageId {
@@ -137,7 +138,7 @@ public class MainActivity extends ActionBarActivity {
                         sourceNode.isSelected(),
                         sourceNode.isChecked(),
                         sourceNode.isHidden(),
-                        sourceNode);
+                        sourceNode.isNew(), sourceNode);
                 return treeviewNode;
             }
         };
@@ -190,6 +191,21 @@ public class MainActivity extends ActionBarActivity {
         } else {
             toggleHideSelectionActive.setTitle("Select hide selection");
         }
+
+        MenuItem toggleMultiSelectable = menu.findItem(R.id.action_toggle_multi_selection);
+        if (treeview.isMultiSelectable()) {
+            toggleMultiSelectable.setTitle("Enable single selection");
+        } else {
+            toggleMultiSelectable.setTitle("Enable multi selection");
+        }
+
+        MenuItem toggleDescriptionLongClickEnabled = menu.findItem(R.id.action_toggle_descript_long_click_enabled);
+        if (treeview.isDescriptionLongClickEnabled()) {
+            toggleDescriptionLongClickEnabled.setTitle("Enable short-click selection");
+        } else {
+            toggleDescriptionLongClickEnabled.setTitle("Enable long-click selection");
+        }
+
         return true;
     }
 
@@ -234,7 +250,22 @@ public class MainActivity extends ActionBarActivity {
     }
 
     public void onMenuAddSameLevelClick(MenuItem item) {
+        NoteNode noteNodeNew = new NoteNode("Brand new node " + new Date().toString());
 
+        TreeviewNode treeviewNodeSelected = treeview.getSelectedFirst();
+
+        if (treeviewNodeSelected != null) {
+            NoteNode noteNodeSelected = (NoteNode) treeviewNodeSelected.getTag();
+            NoteNode noteNodeParent = noteNodeSelected.getParent();
+            if (noteNodeParent == null) {
+                sd.note.addChildNode(noteNodeNew);
+            } else {
+                noteNodeParent.addChildNode(noteNodeNew);
+            }
+        }
+        treeview.getAdapter().notifyDataSetChanged();
+        treeview.invalidate();
+        invalidateOptionsMenu();
     }
 
     public void onMenuAddNextLevelClick(MenuItem item) {
@@ -244,7 +275,7 @@ public class MainActivity extends ActionBarActivity {
         if (treeviewNodeSelected != null) {
             NoteNode noteNodeSelected = (NoteNode) treeviewNodeSelected.getTag();
             if (noteNodeSelected != null) {
-                noteNodeSelected.getChildNodes().add(noteNodeNew);
+                noteNodeSelected.addChildNode(noteNodeNew);
             }
         }
         treeview.getAdapter().notifyDataSetChanged();
@@ -252,7 +283,16 @@ public class MainActivity extends ActionBarActivity {
         invalidateOptionsMenu();
     }
 
-    public void onMenuDeleteClick(MenuItem item) {
+    public void onMenuDeleteClick(MenuItem item)  {
+        TreeviewNode treeviewNodeSelected = treeview.getSelectedFirst();
+        if (treeviewNodeSelected != null) {
+            NoteNode noteNodeSelected = (NoteNode) treeviewNodeSelected.getTag();
+            if (noteNodeSelected != null) {
+                noteNodeSelected.setDelete(true);
+            }
+        }
+        treeview.getAdapter().notifyDataSetChanged();
+        treeview.invalidate();
     }
 
     public void onMenuMoveUpClick(MenuItem item) {
@@ -298,6 +338,32 @@ public class MainActivity extends ActionBarActivity {
                 }
             }
         }
+        treeview.getAdapter().notifyDataSetChanged();
+        treeview.invalidate();
+        invalidateOptionsMenu();
+    }
+
+    public void onMenuToggleNewnessClick(MenuItem menuItem) {
+        TreeviewNode treeviewNodeSelected = treeview.getSelectedFirst();
+        if (treeviewNodeSelected != null) {
+            NoteNode noteNodeSelected = (NoteNode) treeviewNodeSelected.getTag();
+            if (noteNodeSelected != null) {
+                noteNodeSelected.setNew(!noteNodeSelected.isNew());
+            }
+        }
+        treeview.getAdapter().notifyDataSetChanged();
+        treeview.invalidate();
+    }
+
+    public void onMenuToggleMultiSelectionClick(MenuItem item) {
+        treeview.setMultiSelectable(!treeview.isMultiSelectable());
+        treeview.getAdapter().notifyDataSetChanged();
+        treeview.invalidate();
+        invalidateOptionsMenu();
+    }
+
+    public void onMenuToggleEnableSelectionLongClick(MenuItem item)  {
+        treeview.setDescriptionLongClickEnabled(!treeview.isDescriptionLongClickEnabled());
         treeview.getAdapter().notifyDataSetChanged();
         treeview.invalidate();
         invalidateOptionsMenu();

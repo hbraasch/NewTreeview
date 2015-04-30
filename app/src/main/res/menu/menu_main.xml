@@ -30,4 +30,13 @@
         android:onClick="onMenuMoveDownClick"/>
     <item android:id="@+id/action_settings" android:title="@string/action_settings"
         android:orderInCategory="100" app:showAsAction="never" />
+    <item android:id="@+id/action_toggle_newness" android:title="Toggle newness"
+        android:orderInCategory="100" app:showAsAction="never"
+        android:onClick="onMenuToggleNewnessClick"/>
+    <item android:id="@+id/action_toggle_multi_selection" android:title="Toggle multi selection"
+        android:orderInCategory="100" app:showAsAction="never"
+        android:onClick="onMenuToggleMultiSelectionClick"/>
+    <item android:id="@+id/action_toggle_descript_long_click_enabled" android:title="Toggle selection long-click enabled"
+        android:orderInCategory="100" app:showAsAction="never"
+        android:onClick="onMenuToggleEnableSelectionLongClick"/>
 </menu>

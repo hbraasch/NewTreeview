@@ -7,17 +7,23 @@ import java.util.ArrayList;
  */
 public class Note {
 
-    private ArrayList<NoteNode> noteNodes = new ArrayList<>();
+    private ArrayList<NoteNode> childNoteNodes = new ArrayList<>();
 
     public ArrayList<NoteNode> getChildNodes() {
-        return noteNodes;
+        return childNoteNodes;
     }
 
     public void setChildNodes(ArrayList<NoteNode> noteNodes) {
-        this.noteNodes = noteNodes;
+        this.childNoteNodes = noteNodes;
     }
 
     public void setNoteNodes(ArrayList<NoteNode> noteNodes) {
-        this.noteNodes = noteNodes;
+        this.childNoteNodes = noteNodes;
+    }
+
+    public void addChildNode(NoteNode childNode) {
+        childNoteNodes.add(childNode);
+        childNode.setParent(null);
+        childNode.setNew(true);
     }
 }
