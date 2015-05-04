@@ -16,7 +16,7 @@ import com.treeapps.newtreeview.R;
 import java.util.ArrayList;
 
 import shared.Node;
-import shared.Utils;
+import shared.UtilsShared;
 
 /**
  * Used as an treeview overlay to indicate where changes occurred
@@ -62,7 +62,7 @@ public class NewItemsIndicatorView<T extends Node> extends View {
 	}
 	
 	private void init() {
-		intIndicatorWidthInPx = Utils.dpToPx(context, context.getResources().getInteger(R.integer.newitems_indicator_view_width_dp));
+		intIndicatorWidthInPx = UtilsShared.dpToPx(context, context.getResources().getInteger(R.integer.newitems_indicator_view_width_dp));
 		paintIndicator = new Paint();
 		paintIndicator.setDither(true);
 		paintIndicator.setAntiAlias(true);

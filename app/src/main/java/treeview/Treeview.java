@@ -35,7 +35,7 @@ import java.util.List;
 import java.util.Map;
 
 import shared.Node;
-import shared.Utils;
+import shared.UtilsShared;
 
 /**
  * Created by HeinrichWork on 23/04/2015.
@@ -806,12 +806,11 @@ public class Treeview<T> extends RelativeLayout {
      */
     class TreeviewArrayAdapter extends ArrayAdapter<ListViewListItem> {
 
-        private final int DP_2_IN_PX = Utils.dpToPx(getContext(), 2);
-        private final int DP_5_IN_PX = Utils.dpToPx(getContext(), 5);
+        private final int DP_2_IN_PX = UtilsShared.dpToPx(getContext(), 2);
+        private final int DP_5_IN_PX = UtilsShared.dpToPx(getContext(), 5);
 
         private int intResourceId;
         private  List<ListViewListItem> listViewListItems;
-        private int fltMaxClickDistance;
 
         // Form objects
         public TreeviewArrayAdapter(Context context, int intResourceId, List<ListViewListItem> listViewListItems) {
@@ -858,12 +857,13 @@ public class Treeview<T> extends RelativeLayout {
             // Setup icon
             ImageView iconImageView = (ImageView) relativeView.findViewById(R.id.treenode_icon);
             iconImageView.setTag(listViewListItem);
-            iconImageView.setOnClickListener(new IconImageOnClickListener());
             iconImageView.setImageDrawable(treeview.generateIconImageDrawable(listViewListItem));
             if (treeview.isDragDropEnabled()) {
+                iconImageView.setOnClickListener(null);
                 iconImageView.setOnTouchListener(new OnIconTouchListener());
                 iconImageView.setOnDragListener(new OnIconDragListener());
             } else {
+                iconImageView.setOnClickListener(new IconImageOnClickListener());
                 iconImageView.setOnTouchListener(null);
                 iconImageView.setOnDragListener(null);
             }
@@ -962,13 +962,10 @@ public class Treeview<T> extends RelativeLayout {
                 mediaPreviewImageView.setImageDrawable(drawable);
             }
 
-
-            Rect rectPreviewImageSizeInPx = determinePreviewImageSizeInPx(mediaPreviewImageView);
-            fltMaxClickDistance = Utils.pxToDp(getContext(), rectPreviewImageSizeInPx.height() / 10);
-
             // Setup description view (must be last because it is custom and need above already defined component sizes
             IndentableTextView textViewDescription = (IndentableTextView) relativeView.findViewById(R.id.treenode_description);
             textViewDescription.setTag(listViewListItem);
+            Rect rectPreviewImageSizeInPx = determinePreviewImageSizeInPx(mediaPreviewImageView);
             textViewDescription.setProperties(listViewListItem, rectPreviewImageSizeInPx.height(), rectPreviewImageSizeInPx.width(), intMaxIndentLevel, intSelectColor, intTextSizeInSp, intIndentRadiusInDp);
             if (treeview.isDescriptionLongClickEnabled()) {
                 textViewDescription.setOnClickListener(null);
@@ -1200,19 +1197,44 @@ public class Treeview<T> extends RelativeLayout {
             }
         }
 
+        private long lngPressStartTime;
+        private float fltPressedX;
+        private float fltPressedY;
+        private int MAX_CLICK_DURATION_IN_MS = 500;
+        private int MAX_CLICK_DISTANCE_IN_DP = 5;
+
         public class OnIconTouchListener implements OnTouchListener {
 
             @Override
             public boolean onTouch(View view, MotionEvent event) {
-                if (event.getAction() == MotionEvent.ACTION_MOVE) {
-                    // Capture drag start data
-                    ListViewListItem listViewListItem = (ListViewListItem) view.getTag();
-                    TreeviewNode sourceTreeviewNode = listViewListItem.getTreeviewNode();
-                    ClipData data = ClipData.newPlainText("strTreeviewNodeId", Integer.toString(sourceTreeviewNode.getUniqueId()));
-                    IndentableTextView textViewDescription = (IndentableTextView) ((ViewGroup)view.getParent()).findViewById(R.id.treenode_description);
-                    MyDragShadowBuilder shadowBuilder = new MyDragShadowBuilder(textViewDescription);
-                    view.startDrag(data, shadowBuilder, view, 0);
-                    return true;
+                float fltMaxClickDistanceInPx = UtilsShared.dpToPx(getContext(), MAX_CLICK_DISTANCE_IN_DP);
+                switch (event.getAction()) {
+                    case MotionEvent.ACTION_DOWN:
+                        lngPressStartTime = System.currentTimeMillis();
+                        fltPressedX = event.getX();
+                        fltPressedY = event.getY();
+                        break;
+                    case MotionEvent.ACTION_UP:
+                        long pressDuration = System.currentTimeMillis() - lngPressStartTime;
+
+                        if (pressDuration < MAX_CLICK_DURATION_IN_MS
+                                && calcDistanceInPx(fltPressedX, fltPressedY, event.getX(), event.getY()) < fltMaxClickDistanceInPx) {
+                            // Fire the event
+                            new IconImageOnClickListener().onClick(view);
+                            return true;
+                        }
+                        break;
+                    case MotionEvent.ACTION_MOVE:
+                        if (calcDistanceInPx(fltPressedX, fltPressedY, event.getX(), event.getY()) > fltMaxClickDistanceInPx) {
+                            // Capture drag start data
+                            ListViewListItem listViewListItem = (ListViewListItem) view.getTag();
+                            TreeviewNode sourceTreeviewNode = listViewListItem.getTreeviewNode();
+                            ClipData data = ClipData.newPlainText("strTreeviewNodeId", Integer.toString(sourceTreeviewNode.getUniqueId()));
+                            IndentableTextView textViewDescription = (IndentableTextView) ((ViewGroup)view.getParent()).findViewById(R.id.treenode_description);
+                            MyDragShadowBuilder shadowBuilder = new MyDragShadowBuilder(textViewDescription);
+                            view.startDrag(data, shadowBuilder, view, 0);
+                            return true;
+                        }
                 }
                 return false;
             }
@@ -1241,15 +1263,15 @@ public class Treeview<T> extends RelativeLayout {
                         if (sourceTreeviewNode.equals(targetTreeviewNode)) break; // Nothing happens if source is same as target
 
                         if (clipData.getItemAt(0) != null) {
-                            // Determine from user which kind of action needs to happen now
+                            // Determine from user which kind of action needs to happen
                             AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
                             builder.setTitle("On which level to add?");
-                            builder.setPositiveButton("Same level", new DialogInterface.OnClickListener() {
+                            builder.setNeutralButton("Same level", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     float pressedX = event.getX();
                                     float pressedY = event.getY();
-                                    if (pressedY < view.getHeight()/2 ) {
+                                    if (pressedY < view.getHeight() / 2) {
                                         // Dropped on BEFORE part
                                         if (onDropCompletedListener != null) {
                                             onDropCompletedListener.onComplete(sourceTreeviewNode, targetTreeviewNode, Node.EnumDragDropTypes.BEFORE);
@@ -1262,7 +1284,7 @@ public class Treeview<T> extends RelativeLayout {
                                     }
                                 }
                             });
-                            builder.setNeutralButton("Level below", new DialogInterface.OnClickListener() {
+                            builder.setPositiveButton("Level below", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialog, int which) {
                                     onDropCompletedListener.onComplete(sourceTreeviewNode, targetTreeviewNode, Node.EnumDragDropTypes.BELOW);
@@ -1289,11 +1311,11 @@ public class Treeview<T> extends RelativeLayout {
 
 
 
-        public float calcDistance(float x1, float y1, float x2, float y2) {
+        public float calcDistanceInPx(float x1, float y1, float x2, float y2) {
             float dx = x1 - x2;
             float dy = y1 - y2;
-            float distanceInPx = (float) Math.sqrt(dx * dx + dy * dy);
-            return Utils.pxToDp(getContext(), (int) distanceInPx);
+            float fltDistanceInPx = (float) Math.sqrt(dx * dx + dy * dy);
+            return fltDistanceInPx;
         }
     }
 

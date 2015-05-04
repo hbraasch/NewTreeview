@@ -32,7 +32,7 @@ import treeview.TreeviewAdapter;
 import treeview.TreeviewNode;
 import treeview.TreeUtils;
 import shared.Node;
-import shared.Utils;
+import shared.UtilsShared;
 
 
 @SuppressWarnings("ALL")
@@ -337,15 +337,15 @@ public class ActivityTabbed extends ActionBarActivity implements ActionBar.TabLi
                     NoteNode noteNodeTarget = (NoteNode) treeviewTargetNode.getTag();
                     switch (enumDragDropTypes) {
                         case BEFORE:
-                            Utils.addNodeBeforeOrAfter(sd.note.getChildNodes(), noteNodeSource, noteNodeTarget,true);
+                            UtilsShared.addNodeBeforeOrAfter(sd.note.getChildNodes(), noteNodeSource, noteNodeTarget, true);
                             treeview.getAdapter().notifyDataSetChanged();
                             break;
                         case AFTER:
-                            Utils.addNodeBeforeOrAfter(sd.note.getChildNodes(), noteNodeSource, noteNodeTarget,false);
+                            UtilsShared.addNodeBeforeOrAfter(sd.note.getChildNodes(), noteNodeSource, noteNodeTarget, false);
                             treeview.getAdapter().notifyDataSetChanged();
                             break;
                         case BELOW:
-                            Utils.addNodeBelow(sd.note.getChildNodes(), noteNodeSource, noteNodeTarget);
+                            UtilsShared.addNodeBelow(sd.note.getChildNodes(), noteNodeSource, noteNodeTarget);
                             treeview.getAdapter().notifyDataSetChanged();
                             break;
                     }
@@ -418,7 +418,7 @@ public class ActivityTabbed extends ActionBarActivity implements ActionBar.TabLi
                 case INTENT_GET_IMAGE_RESOURCE:
                     Uri objUri = data.getData();
                     if (objUri != null) {
-                        Utils.generateThumbnailImage(this, objUri, new Utils.OnGenerateThumbnailImageCompleteListener() {
+                        UtilsShared.generateThumbnailImage(this, objUri, new UtilsShared.OnGenerateThumbnailImageCompleteListener() {
                             @Override
                             public void onComplete(boolean boolIsSuccess, String strErrorMessage, Drawable drawable) {
                                 if (boolIsSuccess) {
