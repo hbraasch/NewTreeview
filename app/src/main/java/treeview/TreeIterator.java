@@ -2,12 +2,12 @@ package treeview;
 
 import java.util.ArrayList;
 
-import treeview.NodeBase;
+import shared.Node;
 
 /**
  * Created by HeinrichWork on 4/04/2015.
  */
-public class TreeIterator<T extends NodeBase<T>> {
+public class TreeIterator<T extends Node<T>> {
 
     private ArrayList<T> rootTreenodes;
     private OnTouchAllNodesListener onNodeTouchedListener;

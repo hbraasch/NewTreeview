@@ -2,7 +2,7 @@ package treeview;
 
 import java.util.ArrayList;
 
-import note.Node;
+import shared.Node;
 
 /**
  * Created by HeinrichWork on 25/04/2015.
@@ -26,28 +26,11 @@ public abstract class TreeviewAdapter<T extends Node<T>> {
             rootTreenodes.add(treeviewNode);
             TouchTreeNodesRecursively(treeviewNode, sourceChildNode);
         }
-        rootTreenodes = correctExpansionStatus(rootTreenodes);
-        return rootTreenodes;
-    }
-
-    private ArrayList<TreeviewNode> correctExpansionStatus(ArrayList<TreeviewNode> rootTreenodes)  {
-        TreeIterator<TreeviewNode> iterator = new TreeIterator<TreeviewNode>(rootTreenodes);
-        iterator.execute(new TreeIterator.OnTouchAllNodesListener<TreeviewNode>() {
-            @Override
-            public boolean onNode(ArrayList<TreeviewNode> parentArrayList, TreeviewNode treenode, int intLevel) {
-                if (treenode.getExpansionState() == Treeview.EnumTreenodeExpansionState.EMPTY) {
-                    if (!treenode.getChildNodes().isEmpty()) {
-                        treenode.setExpansionState(Treeview.EnumTreenodeExpansionState.EXPANDED);
-                    }
-                }
-                return false;
-            }
-        });
         return rootTreenodes;
     }
 
     private void TouchTreeNodesRecursively(TreeviewNode treeviewNode, T sourceNode) {
-        treeviewNode.setChildTreeviewNodes(new ArrayList<TreeviewNode>());
+        treeviewNode.setChildNodes(new ArrayList<TreeviewNode>());
         for(T sourceChildNode : sourceNode.getChildNodes()) {
             TreeviewNode treeviewNodeNew = convertSourceToTreeNode(sourceChildNode);
             treeviewNodeNew.setParent(treeviewNode);

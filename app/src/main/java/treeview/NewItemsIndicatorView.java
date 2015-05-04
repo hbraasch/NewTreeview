@@ -15,12 +15,13 @@ import com.treeapps.newtreeview.R;
 
 import java.util.ArrayList;
 
-import utils.Utils;
+import shared.Node;
+import shared.Utils;
 
 /**
  * Used as an treeview overlay to indicate where changes occurred
  */
-public class NewItemsIndicatorView extends View {
+public class NewItemsIndicatorView<T extends Node> extends View {
 
 	Context context;
 	Rect indicatorRectBorder;

@@ -1,6 +1,6 @@
 package note;
 
-import android.graphics.drawable.Drawable;
+import shared.Node;
 
 /**
  * Created by HeinrichWork on 26/04/2015.
@@ -12,10 +12,14 @@ public class NoteNode extends Node<NoteNode> {
         setDescription(strDescription);
     }
 
-    public void addChildNode(NoteNode childNode) {
-        childNoteNodes.add(childNode);
-        childNode.setParent(this);
-        childNode.setNew(true);
+    private String strUuid;
+
+    public String getUuid() {
+        return strUuid;
+    }
+
+    public void setUuid(String strUuid) {
+        this.strUuid = strUuid;
     }
 
 }

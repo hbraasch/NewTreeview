@@ -15,7 +15,7 @@ import android.widget.TextView;
 
 import com.treeapps.newtreeview.R;
 
-import utils.Utils;
+import shared.Utils;
 
 /**
  * Created by HeinrichWork on 23/04/2015.

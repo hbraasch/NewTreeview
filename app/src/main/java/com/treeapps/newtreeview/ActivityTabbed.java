@@ -6,12 +6,10 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
-import android.content.ContentValues;
 import android.content.Context;
 import android.content.Intent;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
-import android.provider.MediaStore;
 import android.support.v7.app.ActionBarActivity;
 import android.support.v7.app.ActionBar;
 import android.support.v4.app.Fragment;
@@ -33,7 +31,8 @@ import treeview.Treeview;
 import treeview.TreeviewAdapter;
 import treeview.TreeviewNode;
 import treeview.TreeUtils;
-import utils.Utils;
+import shared.Node;
+import shared.Utils;
 
 
 @SuppressWarnings("ALL")
@@ -95,7 +94,7 @@ public class ActivityTabbed extends ActionBarActivity implements ActionBar.TabLi
         }
         sd.context = this;
 
-        if(savedInstanceState == null) {
+        if (savedInstanceState == null) {
             // Set up user data
             sd.iconImages = new HashMap<Integer, Drawable>();
             sd.iconImages.put(EnumIconImageId.EMPTY.getValue(), getResources().getDrawable(R.mipmap.item_empty));
@@ -302,12 +301,13 @@ public class ActivityTabbed extends ActionBarActivity implements ActionBar.TabLi
 
 
             // Setup components
-            SessionDataFragment sd = ((ActivityTabbed)getActivity()).sd;
-            final Treeview treeview = (Treeview) rootView.findViewById(R.id.treeview);
+            final SessionDataFragment sd = ((ActivityTabbed) getActivity()).sd;
+            final Treeview<NoteNode> treeview = (Treeview) rootView.findViewById(R.id.treeview);
             sd.treeview = treeview;
             treeview.setParameters(R.layout.treenode_item, sd.iconImages, 10, getResources().getColor(R.color.treeview_select_color),
                     getResources().getInteger(R.integer.treeview_text_size_in_dp),
                     getResources().getInteger(R.integer.treeview_indent_radius_in_dp));
+            treeview.setDragDropEnabled(true);
             treeview.setOnSelectionChangedListener(new Treeview.OnSelectionChangedListener() {
                 @Override
                 public void onChange(boolean boolIsSelected, TreeviewNode treeviewNode) {
@@ -330,6 +330,28 @@ public class ActivityTabbed extends ActionBarActivity implements ActionBar.TabLi
                 }
             });
 
+            treeview.setOnDropCompletedListener(new Treeview.OnDropCompletedListener() {
+                @Override
+                public void onComplete(TreeviewNode treeviewSourceNode, TreeviewNode treeviewTargetNode, Node.EnumDragDropTypes enumDragDropTypes) {
+                    NoteNode noteNodeSource = (NoteNode) treeviewSourceNode.getTag();
+                    NoteNode noteNodeTarget = (NoteNode) treeviewTargetNode.getTag();
+                    switch (enumDragDropTypes) {
+                        case BEFORE:
+                            Utils.addNodeBeforeOrAfter(sd.note.getChildNodes(), noteNodeSource, noteNodeTarget,true);
+                            treeview.getAdapter().notifyDataSetChanged();
+                            break;
+                        case AFTER:
+                            Utils.addNodeBeforeOrAfter(sd.note.getChildNodes(), noteNodeSource, noteNodeTarget,false);
+                            treeview.getAdapter().notifyDataSetChanged();
+                            break;
+                        case BELOW:
+                            Utils.addNodeBelow(sd.note.getChildNodes(), noteNodeSource, noteNodeTarget);
+                            treeview.getAdapter().notifyDataSetChanged();
+                            break;
+                    }
+                }
+            });
+
             TreeviewAdapter treeAdapter = new TreeviewAdapter<NoteNode>(sd.note.getChildNodes()) {
                 @Override
                 public TreeviewNode convertSourceToTreeNode(NoteNode sourceNode) {
@@ -346,13 +368,6 @@ public class ActivityTabbed extends ActionBarActivity implements ActionBar.TabLi
                 }
             };
             treeview.setAdapter(treeAdapter);
-
-
-
-
-
-
-
             return rootView;
         }
     }
@@ -403,7 +418,7 @@ public class ActivityTabbed extends ActionBarActivity implements ActionBar.TabLi
                 case INTENT_GET_IMAGE_RESOURCE:
                     Uri objUri = data.getData();
                     if (objUri != null) {
-                        Utils.generateThumbnailImage(this,objUri,new Utils.OnGenerateThumbnailImageCompleteListener() {
+                        Utils.generateThumbnailImage(this, objUri, new Utils.OnGenerateThumbnailImageCompleteListener() {
                             @Override
                             public void onComplete(boolean boolIsSuccess, String strErrorMessage, Drawable drawable) {
                                 if (boolIsSuccess) {
@@ -417,7 +432,7 @@ public class ActivityTabbed extends ActionBarActivity implements ActionBar.TabLi
                                         }
                                     }
                                 } else {
-                                    Toast.makeText(sd.context,strErrorMessage,Toast.LENGTH_LONG).show();
+                                    Toast.makeText(sd.context, strErrorMessage, Toast.LENGTH_LONG).show();
                                 }
                             }
                         });
@@ -435,7 +450,7 @@ public class ActivityTabbed extends ActionBarActivity implements ActionBar.TabLi
     }
 
     public void onMenuToggleChecklistClick(MenuItem item) {
-        sd. treeview.setCheckList(!sd.treeview.isCheckList());
+        sd.treeview.setCheckList(!sd.treeview.isCheckList());
         sd.treeview.getAdapter().notifyDataSetChanged();
         sd.treeview.invalidate();
         invalidateOptionsMenu();
@@ -489,12 +504,12 @@ public class ActivityTabbed extends ActionBarActivity implements ActionBar.TabLi
         invalidateOptionsMenu();
     }
 
-    public void onMenuDeleteClick(MenuItem item)  {
+    public void onMenuDeleteClick(MenuItem item) {
         TreeviewNode treeviewNodeSelected = sd.treeview.getSelectedFirst();
         if (treeviewNodeSelected != null) {
             NoteNode noteNodeSelected = (NoteNode) treeviewNodeSelected.getTag();
             if (noteNodeSelected != null) {
-                noteNodeSelected.setDelete(true);
+                noteNodeSelected.setDeleted(true);
             }
         }
         sd.treeview.getAdapter().notifyDataSetChanged();
@@ -568,7 +583,7 @@ public class ActivityTabbed extends ActionBarActivity implements ActionBar.TabLi
         invalidateOptionsMenu();
     }
 
-    public void onMenuToggleEnableSelectionLongClick(MenuItem item)  {
+    public void onMenuToggleEnableSelectionLongClick(MenuItem item) {
         sd.treeview.setDescriptionLongClickEnabled(!sd.treeview.isDescriptionLongClickEnabled());
         sd.treeview.getAdapter().notifyDataSetChanged();
         sd.treeview.invalidate();

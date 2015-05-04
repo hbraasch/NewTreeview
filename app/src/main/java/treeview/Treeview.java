@@ -2,16 +2,20 @@ package treeview;
 
 import android.annotation.TargetApi;
 import android.app.AlertDialog;
+import android.content.ClipData;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.res.Resources;
 import android.content.res.TypedArray;
+import android.graphics.Point;
 import android.graphics.Rect;
 import android.graphics.drawable.Drawable;
 import android.graphics.drawable.LayerDrawable;
 import android.os.Build;
 import android.util.AttributeSet;
+import android.view.DragEvent;
 import android.view.LayoutInflater;
+import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
@@ -30,14 +34,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import utils.Utils;
+import shared.Node;
+import shared.Utils;
 
 /**
  * Created by HeinrichWork on 23/04/2015.
  */
-public class Treeview extends RelativeLayout {
-
-
+public class Treeview<T> extends RelativeLayout {
 
 
     public enum EnumTreenodeExpansionState {
@@ -64,12 +67,16 @@ public class Treeview extends RelativeLayout {
         public void onChange(boolean boolIsHidden, TreeviewNode treeviewNode);
     }
 
+    public interface OnDropCompletedListener {
+        public void onComplete(TreeviewNode treeviewSourceNode, TreeviewNode treeviewTargetNode, Node.EnumDragDropTypes enumDragDropTypes);
+    }
+
     // Tree management data
     private Map<Integer,Drawable> iconImages = new HashMap<>();
-    private ArrayList<TreeviewNode> childNodes = new ArrayList<TreeviewNode>();
+    private ArrayList<TreeviewNode<T>> childNodes = new ArrayList<TreeviewNode<T>>();
     private TreeviewArrayAdapter arrayAdapter;
 
-    // List management data
+    // ListView management data
     private ArrayList<ListViewListItem> listViewListItems;
     private TreeviewAdapter treeAdapter;
     public ListView listView;
@@ -85,6 +92,7 @@ public class Treeview extends RelativeLayout {
     private boolean boolIsHiddenModeEnabled;
     private boolean boolIsCheckList;
     private boolean boolIsCheckedItemsMadeHidden;
+    private boolean boolIsDragDropEnabled;
 
     private int intTextSizeInSp;
     protected int intMaxIndentLevel;
@@ -95,14 +103,14 @@ public class Treeview extends RelativeLayout {
     private OnSelectionChangedListener onSelectionChangedListener;
     private OnCheckChangedListener onCheckChangedListener;
     private OnHideCheckChangedListener onHideCheckChangedListener;
+    private OnDropCompletedListener onDropCompletedListener;
 
+    // Constructors
     public Treeview(Context context) {
         super(context);
         addViewsToTreeview(context);
 
     }
-
-
 
     public Treeview(Context context, AttributeSet attrs) {
         super(context, attrs);
@@ -144,7 +152,6 @@ public class Treeview extends RelativeLayout {
 
     public void setParameters(int intTreenodeItemResourceId, Map<Integer,Drawable> iconImages, int intMaxIndentLevel, int intSelectColor, int intTextSizeInSp, int intIndentRadiusInDp) {
 
-        // General initialisation
         this.iconImages = iconImages;
         this.intMaxIndentLevel = intMaxIndentLevel;
         this.intSelectColor = intSelectColor;
@@ -156,28 +163,16 @@ public class Treeview extends RelativeLayout {
         listView.setAdapter(arrayAdapter);
         listView.setBackgroundColor(getResources().getColor(R.color.white_background));
 
+        // Default behaviours
         boolHiddenSelectionIsActive = false;
         boolIsHiddenModeEnabled = false;
-
         boolIsCheckList = false;
         boolIsCheckedItemsMadeHidden = false;
-
-
+        boolIsDragDropEnabled = false;
 
     }
 
-    public void setAdapter(TreeviewAdapter treeAdapter) {
 
-        // Adapter
-        this.treeAdapter = treeAdapter;
-        treeAdapter.setTreeview(this);
-        childNodes = treeAdapter.adapt();
-        invalidate();
-    }
-
-    public TreeviewAdapter getAdapter() {
-        return this.treeAdapter;
-    }
 
 
     // Getter Setters
@@ -190,11 +185,11 @@ public class Treeview extends RelativeLayout {
         this.iconImages = iconImages;
     }
 
-    public ArrayList<TreeviewNode> getChildNodes() {
+    public ArrayList<TreeviewNode<T>> getChildNodes() {
         return childNodes;
     }
 
-    public void setChildNodes(ArrayList<TreeviewNode> childNodes) {
+    public void setChildNodes(ArrayList<TreeviewNode<T>> childNodes) {
         this.childNodes = childNodes;
     }
 
@@ -270,33 +265,111 @@ public class Treeview extends RelativeLayout {
         this.boolIsDescriptionLongClickEnabled = boolIsDescriptionLongClickEnabled;
     }
 
+    public boolean isDragDropEnabled() {
+        return boolIsDragDropEnabled;
+    }
+
+    public void setDragDropEnabled(boolean boolIsDragDropEnabled) {
+        this.boolIsDragDropEnabled = boolIsDragDropEnabled;
+    }
+
+    public OnDropCompletedListener getOnDropCompletedListener() {
+        return onDropCompletedListener;
+    }
+
+    public void setOnDropCompletedListener(OnDropCompletedListener onDropCompletedListener) {
+        this.onDropCompletedListener = onDropCompletedListener;
+    }
+
     // Methods
 
     public Treeview getTreeview() {
         return this;
     }
 
-    public void addNode(TreeviewNode treeviewNode) {
+    public void setAdapter(TreeviewAdapter treeAdapter) {
+
+        // Adapter
+        this.treeAdapter = treeAdapter;
+        treeAdapter.setTreeview(this);
+        childNodes = treeAdapter.adapt();
+        invalidate();
+    }
+
+    public TreeviewAdapter getAdapter() {
+        return this.treeAdapter;
+    }
+
+    public void addChildNode(TreeviewNode treeviewNode) {
         treeviewNode.setParent(null);
         getChildNodes().add(treeviewNode);
     }
 
-    public void removeNode(final TreeviewNode removeTreeviewNode) {
-        TreeIterator<TreeviewNode> treeIterator = new TreeIterator<>(getChildNodes());
-        treeIterator.execute(new TreeIterator.OnTouchAllNodesListener<TreeviewNode>() {
+    public void addChildNode(TreeviewNode treeviewNode, int index) {
+        treeviewNode.setParent(null);
+        getChildNodes().add(index, treeviewNode);
+        treeviewNode.setNew(true);
+    }
+
+    public void removeNode(final TreeviewNode<T> removeTreeviewNode) {
+        TreeviewNode<T> parentTreeviewNode = removeTreeviewNode.getParent();
+        if (parentTreeviewNode == null) {
+            getChildNodes().remove(removeTreeviewNode);
+        } else {
+            parentTreeviewNode.getChildNodes().remove(removeTreeviewNode);
+        }
+    }
+
+
+
+    private void correctExpansionStatus()  {
+        TreeIterator<TreeviewNode<T>> iterator = new TreeIterator<>(getChildNodes());
+        iterator.execute(new TreeIterator.OnTouchAllNodesListener<TreeviewNode>() {
             @Override
-            public boolean onNode(ArrayList<TreeviewNode> parentArrayList, TreeviewNode treeviewNode, int intLevel) {
-                if (treeviewNode.equals(removeTreeviewNode)) {
-                    parentArrayList.remove(treeviewNode);
-                    return true;
+            public boolean onNode(ArrayList<TreeviewNode> parentArrayList, TreeviewNode treenode, int intLevel) {
+                switch (treenode.getExpansionState()) {
+                    case EMPTY:
+                        if (!treenode.getChildNodes().isEmpty()) {
+                            treenode.setExpansionState(Treeview.EnumTreenodeExpansionState.EXPANDED);
+                        }
+                        break;
+                    case  EXPANDED:
+                    case COLLAPSED:
+                        if (treenode.getChildNodes().isEmpty()) {
+                            treenode.setExpansionState(Treeview.EnumTreenodeExpansionState.EMPTY);
+                        }
+                        break;
+                }
+                if (treenode.getExpansionState() == Treeview.EnumTreenodeExpansionState.EMPTY) {
+                    if (!treenode.getChildNodes().isEmpty()) {
+                        treenode.setExpansionState(Treeview.EnumTreenodeExpansionState.EXPANDED);
+                    }
                 }
                 return false;
             }
         });
     }
 
+
+    TreeviewNode treeviewNodeFound;
+    private TreeviewNode getTreeviewNodeFromId(final int intTreeviewNodeUuid) {
+        treeviewNodeFound = null;
+        TreeIterator<TreeviewNode<T>> treeIterator = new TreeIterator<>(getChildNodes());
+        treeIterator.execute(new TreeIterator.OnTouchAllNodesListener<TreeviewNode>() {
+            @Override
+            public boolean onNode(ArrayList<TreeviewNode> parentArrayList, TreeviewNode treeviewNode, int intLevel) {
+                if (treeviewNode.getUniqueId() == intTreeviewNodeUuid) {
+                    treeviewNodeFound = treeviewNode;
+                    return true;
+                }
+                return false;
+            }
+        });
+        return treeviewNodeFound;
+    }
+
     public TreeviewNode getSelectedFirst() {
-        ArrayList<TreeviewNode> selectedTreeviewNodes = getSelected();
+        ArrayList<TreeviewNode<T>> selectedTreeviewNodes = getSelected();
         if (selectedTreeviewNodes != null) {
             if (selectedTreeviewNodes.size() != 0) {
                     return selectedTreeviewNodes.get(0);
@@ -305,9 +378,9 @@ public class Treeview extends RelativeLayout {
         return null;
     }
 
-    public ArrayList<TreeviewNode> getSelected() {
-        final ArrayList<TreeviewNode> selectedTreeviewNodes = new ArrayList<>();
-        TreeIterator<TreeviewNode> iterator = new TreeIterator<>(this.getChildNodes());
+    public ArrayList<TreeviewNode<T>> getSelected() {
+        final ArrayList<TreeviewNode<T>> selectedTreeviewNodes = new ArrayList<>();
+        TreeIterator<TreeviewNode<T>> iterator = new TreeIterator<TreeviewNode<T>>(this.getChildNodes());
         iterator.execute(new TreeIterator.OnTouchAllNodesListener<TreeviewNode>() {
             @Override
             public boolean onNode(ArrayList parentArrayList, TreeviewNode treenode, int intLevel) {
@@ -324,7 +397,7 @@ public class Treeview extends RelativeLayout {
         final ArrayList<ListViewListItem> listViewListItemsNew = new ArrayList<ListViewListItem>();
 
         // Iterate through tree
-        TreeIterator<TreeviewNode> treeIterator = new TreeIterator<>(getChildNodes());
+        TreeIterator<TreeviewNode<T>> treeIterator = new TreeIterator<>(getChildNodes());
         treeIterator.executeWithBranchDepthControllable(new TreeIterator.OnTouchAllNodesListener<TreeviewNode>() {
             @Override
             public boolean onNode(ArrayList<TreeviewNode> parentArrayList, TreeviewNode treeviewNode, int intLevel) {
@@ -480,7 +553,7 @@ public class Treeview extends RelativeLayout {
     }
 
     private void unselectAllExcluding(TreeviewNode excludedTreeNode)  {
-        ArrayList<TreeviewNode> selectedTreenodes = getSelected();
+        ArrayList<TreeviewNode<T>> selectedTreenodes = getSelected();
         if (selectedTreenodes.size() != 0) {
             for (TreeviewNode selectedTreenode : selectedTreenodes) {
                 if (!selectedTreenode.equals(excludedTreeNode)) {
@@ -594,7 +667,7 @@ public class Treeview extends RelativeLayout {
     }
 
     public void setIsChanged(final boolean boolIsDirty) {
-        TreeIterator<TreeviewNode> treeIterator = new TreeIterator<>(getChildNodes());
+        TreeIterator<TreeviewNode<T>> treeIterator = new TreeIterator<>(getChildNodes());
         treeIterator.execute(new TreeIterator.OnTouchAllNodesListener<TreeviewNode>() {
             @Override
             public boolean onNode(ArrayList<TreeviewNode> parentArrayList, TreeviewNode treeviewNode, int intLevel) {
@@ -606,7 +679,7 @@ public class Treeview extends RelativeLayout {
 
     private boolean boolItteration;
     public boolean isChanged() {
-        TreeIterator<TreeviewNode> treeIterator = new TreeIterator<>(getChildNodes());
+        TreeIterator<TreeviewNode<T>> treeIterator = new TreeIterator<>(getChildNodes());
         treeIterator.execute(new TreeIterator.OnTouchAllNodesListener<TreeviewNode>() {
             @Override
             public boolean onNode(ArrayList<TreeviewNode> parentArrayList, TreeviewNode treeviewNode, int intLevel) {
@@ -631,6 +704,7 @@ public class Treeview extends RelativeLayout {
      */
     public void invalidate() {
         // Generate the data for the listView object to display the tree
+        correctExpansionStatus();
         listViewListItems = generateListItems();
         arrayAdapter.clear();
         arrayAdapter.addAll(listViewListItems);
@@ -786,6 +860,13 @@ public class Treeview extends RelativeLayout {
             iconImageView.setTag(listViewListItem);
             iconImageView.setOnClickListener(new IconImageOnClickListener());
             iconImageView.setImageDrawable(treeview.generateIconImageDrawable(listViewListItem));
+            if (treeview.isDragDropEnabled()) {
+                iconImageView.setOnTouchListener(new OnIconTouchListener());
+                iconImageView.setOnDragListener(new OnIconDragListener());
+            } else {
+                iconImageView.setOnTouchListener(null);
+                iconImageView.setOnDragListener(null);
+            }
 
             // Setup checkbox
             // Checklist or Hide activities
@@ -873,7 +954,7 @@ public class Treeview extends RelativeLayout {
             mediaPreviewImageView.setOnClickListener(new MediaPreviewImageOnClickListener());
 
             // Draw content of preview image if resource has an preview image
-            Drawable drawable = listViewListItem.getTreeviewNode().getDrawableMediaPreviewImage();
+            Drawable drawable = listViewListItem.getTreeviewNode().getMediaPreviewImage();
             if (drawable == null) {
                 mediaPreviewImageView.setVisibility(View.GONE);
             } else {
@@ -896,6 +977,7 @@ public class Treeview extends RelativeLayout {
                 textViewDescription.setOnLongClickListener(null);
                 textViewDescription.setOnClickListener(new TextViewDescriptionOnClickListener());
             }
+
 
             // Done
             return relativeView;
@@ -1104,6 +1186,114 @@ public class Treeview extends RelativeLayout {
                 // Toggle selection
                 treenode.toggleSelection();
             }
+        }
+
+        class MyDragShadowBuilder extends DragShadowBuilder {
+            @Override
+            public void onProvideShadowMetrics(Point shadowSize, Point shadowTouchPoint) {
+                super.onProvideShadowMetrics(shadowSize, shadowTouchPoint);
+                shadowTouchPoint.set(shadowSize.y/2, shadowSize.y/2); // Finger will be on the leftmost side of shadow
+            }
+
+            public MyDragShadowBuilder(View view) {
+                super(view);
+            }
+        }
+
+        public class OnIconTouchListener implements OnTouchListener {
+
+            @Override
+            public boolean onTouch(View view, MotionEvent event) {
+                if (event.getAction() == MotionEvent.ACTION_MOVE) {
+                    // Capture drag start data
+                    ListViewListItem listViewListItem = (ListViewListItem) view.getTag();
+                    TreeviewNode sourceTreeviewNode = listViewListItem.getTreeviewNode();
+                    ClipData data = ClipData.newPlainText("strTreeviewNodeId", Integer.toString(sourceTreeviewNode.getUniqueId()));
+                    IndentableTextView textViewDescription = (IndentableTextView) ((ViewGroup)view.getParent()).findViewById(R.id.treenode_description);
+                    MyDragShadowBuilder shadowBuilder = new MyDragShadowBuilder(textViewDescription);
+                    view.startDrag(data, shadowBuilder, view, 0);
+                    return true;
+                }
+                return false;
+            }
+        }
+
+
+        public class OnIconDragListener implements OnDragListener {
+            @Override
+            public boolean onDrag(final View view, final DragEvent event) {
+                ListViewListItem listViewListItem = (ListViewListItem) view.getTag();
+                int action = event.getAction();
+                switch (action) {
+                    case DragEvent.ACTION_DRAG_STARTED:
+                        break;
+                    case DragEvent.ACTION_DRAG_ENTERED:
+                        break;
+                    case DragEvent.ACTION_DRAG_EXITED:
+                        break;
+                    case DragEvent.ACTION_DROP:
+                        final TreeviewNode targetTreeviewNode = listViewListItem.getTreeviewNode();
+                        final Treeview treeview = listViewListItem.getTreeview();
+                        final ClipData clipData = event.getClipData();
+                        String strSourceTreeNodeUuid = (String) clipData.getItemAt(0).coerceToText(getContext());
+                        final TreeviewNode sourceTreeviewNode = treeview.getTreeviewNodeFromId(Integer.parseInt(strSourceTreeNodeUuid));
+
+                        if (sourceTreeviewNode.equals(targetTreeviewNode)) break; // Nothing happens if source is same as target
+
+                        if (clipData.getItemAt(0) != null) {
+                            // Determine from user which kind of action needs to happen now
+                            AlertDialog.Builder builder = new AlertDialog.Builder(getContext());
+                            builder.setTitle("On which level to add?");
+                            builder.setPositiveButton("Same level", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    float pressedX = event.getX();
+                                    float pressedY = event.getY();
+                                    if (pressedY < view.getHeight()/2 ) {
+                                        // Dropped on BEFORE part
+                                        if (onDropCompletedListener != null) {
+                                            onDropCompletedListener.onComplete(sourceTreeviewNode, targetTreeviewNode, Node.EnumDragDropTypes.BEFORE);
+                                            treeview.getAdapter().notifyDataSetChanged();
+                                        }
+                                    } else {
+                                        // Dropped on AFTER part
+                                        onDropCompletedListener.onComplete(sourceTreeviewNode, targetTreeviewNode, Node.EnumDragDropTypes.AFTER);
+                                        treeview.getAdapter().notifyDataSetChanged();
+                                    }
+                                }
+                            });
+                            builder.setNeutralButton("Level below", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    onDropCompletedListener.onComplete(sourceTreeviewNode, targetTreeviewNode, Node.EnumDragDropTypes.BELOW);
+                                    treeview.getAdapter().notifyDataSetChanged();
+                                }
+                            });
+                            builder.setNegativeButton("Cancel", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialog, int which) {
+                                    // Do nothing
+                                }
+                            });
+                            builder.show();
+                        }
+                        break;
+                    case DragEvent.ACTION_DRAG_ENDED:
+                        break;
+                    default:
+                        break;
+                }
+                return true;
+            }
+        }
+
+
+
+        public float calcDistance(float x1, float y1, float x2, float y2) {
+            float dx = x1 - x2;
+            float dy = y1 - y2;
+            float distanceInPx = (float) Math.sqrt(dx * dx + dy * dy);
+            return Utils.pxToDp(getContext(), (int) distanceInPx);
         }
     }
 
